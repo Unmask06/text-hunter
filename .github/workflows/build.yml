@@ -29,6 +29,6 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.XERGIZ_TRIGGER_TOKEN }}
-          repository: Unmask06/text-hunter
+          repository: XergiZ/xergiz
           event-type: product-updated
           client-payload: '{"product": "text-hunter", "repo": "Unmask06/text-hunter"}'

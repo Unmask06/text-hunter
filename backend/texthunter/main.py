@@ -52,8 +52,8 @@ app.add_middleware(
 
 # When running standalone (local dev), use /api prefix to match frontend expectations.
 # In production when mounted at /text-hunter by xergiz backend, set TEXTHUNTER_MOUNTED=true to disable prefix.
-is_mounted = os.environ.get("TEXTHUNTER_MOUNTED", "false").lower() == "true"
-ROUTER_PREFIX = "" if is_mounted else "/api"
+is_standalone = os.environ.get("TEXT-HUNTER_STANDALONE", "false").lower() == "true"
+ROUTER_PREFIX = "/texthunter" if is_standalone else ""
 
 app.include_router(router, prefix=ROUTER_PREFIX)
 

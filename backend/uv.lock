@@ -1063,7 +1063,7 @@ wheels = [
 ]
 
 [[package]]
-name = "textextract"
+name = "texthunter"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

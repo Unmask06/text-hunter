@@ -1,8 +1,11 @@
-"""FastAPI application entry point."""
+"""TextHunter API - FastAPI application for PDF text pattern extraction."""
 
 import logging
+import os
 import sys
+from importlib.metadata import version
 
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -28,33 +31,50 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="TextHunter API",
     description="Hunt and extract text patterns from PDF documents",
-    version="0.1.0",
+    version=version("texthunter"),
 )
 
-# Configure CORS for frontend development
+# Allow CORS for Vue frontend (assuming runs on port 5173 by default)
+origins: list[str] = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://xergiz.com",
+    "https://www.xergiz.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include API routes
-app.include_router(router, prefix="/api")
+# When running standalone (local dev), use /api prefix to match frontend expectations.
+# In production when mounted at /text-hunter by xergiz backend, set TEXTHUNTER_MOUNTED=true to disable prefix.
+is_mounted = os.environ.get("TEXTHUNTER_MOUNTED", "false").lower() == "true"
+ROUTER_PREFIX = "" if is_mounted else "/api"
 
-logger.info("Text Extractor API initialized")
+app.include_router(router, prefix=ROUTER_PREFIX)
+
+logger.info("TextHunter API initialized")
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, str]:
     """Root endpoint with API info."""
     logger.debug("Root endpoint accessed")
     return {
-        "name": "Text Extractor API",
-        "version": "0.1.0",
+        "name": "TextHunter API",
+        "version": version("texthunter"),
         "docs": "/docs",
     }
+
+
+def run_server(host: str = "0.0.0.0", port: int = 8000) -> None:
+    """Run the TextHunter API server."""
+    uvicorn.run("texthunter.main:app", host=host, port=port, reload=True)
+
+
+if __name__ == "__main__":
+    run_server()

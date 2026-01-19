@@ -1,5 +1,5 @@
 [project]
-name = "textextract"
+name = "texthunter"
 version = "0.1.0"
 description = "P&ID Text Extractor - Backend API for regex matching and Excel generation"
 readme = "README.md"

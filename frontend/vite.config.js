@@ -16,7 +16,7 @@ export default defineConfig({
   // Development: proxy API requests to the local backend server
   server: {
     proxy: {
-      '/texthunter': {
+      '/text-hunter': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       }

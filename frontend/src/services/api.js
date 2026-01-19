@@ -6,8 +6,8 @@ import axios from "axios";
 // Use production API in production, local proxy in development
 const API_BASE_URL =
   import.meta.env.PROD
-    ? "https://api.xergiz.com/texthunter"
-    : "/texthunter";
+    ? "https://api.xergiz.com/text-hunter"
+    : "/text-hunter";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

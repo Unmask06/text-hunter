@@ -1,0 +1,18 @@
+[project]
+name = "textextract"
+version = "0.1.0"
+description = "P&ID Text Extractor - Backend API for regex matching and Excel generation"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.115.0",
+    "pandas>=2.2.0",
+    "openpyxl>=3.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+]

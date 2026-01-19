@@ -50,8 +50,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Always use /texthunter prefix to match frontend API expectations
-ROUTER_PREFIX = "/texthunter"
+# Always use /text-hunter prefix to match frontend API expectations
+ROUTER_PREFIX = "/text-hunter"
 
 app.include_router(router, prefix=ROUTER_PREFIX)
 

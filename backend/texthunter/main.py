@@ -1,7 +1,6 @@
 """TextHunter API - FastAPI application for PDF text pattern extraction."""
 
 import logging
-import os
 import sys
 from importlib.metadata import version
 
@@ -40,6 +39,7 @@ origins: list[str] = [
     "http://127.0.0.1:5173",
     "https://xergiz.com",
     "https://www.xergiz.com",
+    "https://api.xergiz.com",
 ]
 
 app.add_middleware(
@@ -50,10 +50,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# When running standalone (local dev), use /api prefix to match frontend expectations.
-# In production when mounted at /text-hunter by xergiz backend, set TEXTHUNTER_MOUNTED=true to disable prefix.
-is_standalone = os.environ.get("TEXT-HUNTER_STANDALONE", "false").lower() == "true"
-ROUTER_PREFIX = "/texthunter" if is_standalone else ""
+# Always use /texthunter prefix to match frontend API expectations
+ROUTER_PREFIX = "/texthunter"
 
 app.include_router(router, prefix=ROUTER_PREFIX)
 

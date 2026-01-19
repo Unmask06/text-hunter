@@ -1,13 +1,19 @@
 /**
  * API service layer for communicating with the FastAPI backend.
  */
-import axios from 'axios';
+import axios from "axios";
+
+// Use production API in production, local proxy in development
+const API_BASE_URL =
+  import.meta.env.PROD
+    ? "https://api.xergiz.com/texthunter"
+    : "/texthunter";
 
 const api = axios.create({
-    baseURL: '/api',
-    headers: {
-        'Content-Type': 'application/json',
-    },
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 /**
@@ -20,8 +26,8 @@ const api = axios.create({
  * @returns {Promise<{matches: Array, total_count: number, preview_count: number}>}
  */
 export async function extractMatches(payload) {
-    const response = await api.post('/extract', payload);
-    return response.data;
+  const response = await api.post("/extract", payload);
+  return response.data;
 }
 
 /**
@@ -30,8 +36,8 @@ export async function extractMatches(payload) {
  * @returns {Promise<{matches: Array, total_count: number}>}
  */
 export async function extractAllMatches(payload) {
-    const response = await api.post('/extract-all', payload);
-    return response.data;
+  const response = await api.post("/extract-all", payload);
+  return response.data;
 }
 
 /**
@@ -40,8 +46,8 @@ export async function extractAllMatches(payload) {
  * @returns {Promise<{pattern: string, explanation: string, test_results: Object}>}
  */
 export async function guessRegex(examples) {
-    const response = await api.post('/guess-regex', { examples });
-    return response.data;
+  const response = await api.post("/guess-regex", { examples });
+  return response.data;
 }
 
 /**
@@ -51,33 +57,33 @@ export async function guessRegex(examples) {
  * @returns {Promise<Blob>} Excel file blob
  */
 export async function exportExcel(matches, includeContext = true) {
-    const response = await api.post(
-        '/export',
-        { matches, include_context: includeContext },
-        { responseType: 'blob' }
-    );
+  const response = await api.post(
+    "/export",
+    { matches, include_context: includeContext },
+    { responseType: "blob" },
+  );
 
-    // Extract filename from Content-Disposition header
-    const contentDisposition = response.headers['content-disposition'];
-    let filename = 'extraction_results.xlsx';
-    if (contentDisposition) {
-        const match = contentDisposition.match(/filename=(.+)/);
-        if (match) {
-            filename = match[1];
-        }
+  // Extract filename from Content-Disposition header
+  const contentDisposition = response.headers["content-disposition"];
+  let filename = "extraction_results.xlsx";
+  if (contentDisposition) {
+    const match = contentDisposition.match(/filename=(.+)/);
+    if (match) {
+      filename = match[1];
     }
+  }
 
-    // Trigger download
-    const url = window.URL.createObjectURL(response.data);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+  // Trigger download
+  const url = window.URL.createObjectURL(response.data);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 
-    return response.data;
+  return response.data;
 }
 
 /**
@@ -85,8 +91,8 @@ export async function exportExcel(matches, includeContext = true) {
  * @returns {Promise<{status: string, timestamp: string}>}
  */
 export async function checkHealth() {
-    const response = await api.get('/health');
-    return response.data;
+  const response = await api.get("/health");
+  return response.data;
 }
 
 export default api;

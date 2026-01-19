@@ -1,6 +1,6 @@
 [project]
 name = "texthunter"
-version = "0.1.1"
+version = "0.1.2"
 description = "P&ID Text Extractor - Backend API for regex matching and Excel generation"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -11,8 +11,4 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.24.0",
-    "httpx>=0.27.0",
-]
+dev = ["pytest>=8.0.0", "pytest-asyncio>=0.24.0", "httpx>=0.27.0"]

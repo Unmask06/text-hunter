@@ -91,7 +91,7 @@ function initPdfWorker() {
 
 async function checkBackendStatus() {
   try {
-    const response = await fetch('/api/health');
+    const response = await fetch('/texthunter/health');
     if (response.ok) {
       backendStatus.value = 'online';
     } else {

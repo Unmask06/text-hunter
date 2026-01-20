@@ -3,18 +3,19 @@
  */
 import axios from "axios";
 
-// Use production API in production, local proxy in development
-const API_BASE_URL =
-  import.meta.env.PROD
-    ? "https://api.xergiz.com/text-hunter"
-    : "/text-hunter";
+// Base URL: localhost for dev, api.xergiz.com for production
+const API_BASE_URL = import.meta.env.DEV
+  ? "http://localhost:8000"
+  : "https://api.xergiz.com/text-hunter";
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: `${API_BASE_URL}`,
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+console.log(API_BASE_URL);
 
 /**
  * Extract matches from text content using regex patterns.

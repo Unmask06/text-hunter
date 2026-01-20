@@ -8,7 +8,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routes import router
+from texthunter.routes import router
 
 # Configure logging
 logging.basicConfig(
@@ -50,10 +50,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Always use /text-hunter prefix to match frontend API expectations
-ROUTER_PREFIX = "/text-hunter"
 
-app.include_router(router, prefix=ROUTER_PREFIX)
+app.include_router(router)
 
 logger.info("TextHunter API initialized")
 

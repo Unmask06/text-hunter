@@ -4,16 +4,14 @@ from io import BytesIO
 
 import pandas as pd
 from openpyxl.styles import Alignment, Font, PatternFill
-from openpyxl.utils.dataframe import dataframe_to_rows
 
-from .models import MatchResult
+from texthunter.models import MatchResult
 
 
 def build_dataframe(
     matches: list[MatchResult], include_context: bool = True
 ) -> pd.DataFrame:
-    """
-    Create a DataFrame from match results.
+    """Create a DataFrame from match results.
 
     Args:
         matches: List of MatchResult objects
@@ -39,8 +37,7 @@ def build_dataframe(
 
 
 def generate_excel(matches: list[MatchResult], include_context: bool = True) -> BytesIO:
-    """
-    Generate an Excel file from match results.
+    """Generate an Excel file from match results.
 
     Args:
         matches: List of MatchResult objects

@@ -260,6 +260,76 @@ wheels = [
 ]
 
 [[package]]
+name = "grex"
+version = "1.0.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.12'",
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3e/24/1f61b19c509e8da00dcfce896f1fa285872f1acb0f3df6f1c77211e63e35/grex-1.0.1-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:52417e97e98808f5bc2f06456685f5870392d13f56068767de373f7477505e29", size = 1034458, upload-time = "2024-03-06T11:59:11.501Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/ef/6428d828aaf16d1c39bc2e61288be9f5a4b349b780667dff6d3d588e0987/grex-1.0.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:11c5d61a436c83d38b4526406081c0f1061d1dcd730faec39684ff77137d40de", size = 976304, upload-time = "2024-03-06T11:59:15.174Z" },
+    { url = "https://files.pythonhosted.org/packages/e0/45/11f2a3b5290b2bbdbbeddff99556bbe78e488cf57d1d2fd8c6f3c9bf99b0/grex-1.0.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:64f86287f14e7dd8e651dd1561f9c3f648c80f7bb21bce7ab94f8c483e3a00a3", size = 1853907, upload-time = "2024-03-06T11:59:21.47Z" },
+    { url = "https://files.pythonhosted.org/packages/38/c3/a2e98e40a4db2c92a79ed6a628b7e63afaaa2e5d4fbeca742125104e201d/grex-1.0.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6cda2b4610e44563c3659829637951034d5360ad4680e9701409deec6137dffc", size = 1905742, upload-time = "2024-03-06T11:59:26.269Z" },
+    { url = "https://files.pythonhosted.org/packages/79/26/1a569e511fde755fb0555c1a703d7d4903eeaa4c302f19746ca9f64431ad/grex-1.0.1-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:898cb3f2157060d7d3e51626c61b2dd6bf2f6e3e9da98e61de289efcc11b0cd3", size = 1898853, upload-time = "2024-03-06T11:59:34.123Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/8f/74dd7c0d22278b55947c14358feb8e41cce15435dcefce1e6b395ec3eb77/grex-1.0.1-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:fa1d95e2a9f74e265de0de5006935fe929dbd686021afb84518c43a71e990b59", size = 2023500, upload-time = "2024-03-15T13:20:27.612Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/97/5f78fa325854078ad5e6c300ab6bcb1ee5e58afe6c223bc9e2a219fc547d/grex-1.0.1-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:73160f4ff0b83c7d7d4c0c23944f0f0e94ab36f44d600b6bf6795916ac3800e4", size = 2025546, upload-time = "2024-03-15T13:20:32.32Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/9b/7c9a0245b8a02b7df1b8dd60de133b2ed9c29de465eb89292289a446ec07/grex-1.0.1-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:74e5b1067ebc81954e969acfb79f62f60836a51fa361b0d3658e82b7df211380", size = 2074918, upload-time = "2024-03-15T13:20:37.185Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/62/c038847980d1eb3d5b7f5df5893608a9ceb217aa990447210cab23a0bb51/grex-1.0.1-cp311-none-win32.whl", hash = "sha256:92f7126d2591ffac0d58c18b7802135a718fd577cc194492099fe9cf21342a33", size = 789118, upload-time = "2024-03-06T11:59:36.875Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/40/d3781bc16539e0964b60a7c8156ea432e1298de6dda534bd8a292c152708/grex-1.0.1-cp311-none-win_amd64.whl", hash = "sha256:544dff5a2a4d44e6edb346118210635c0c2cc402203374c469cf98937d6e9cca", size = 861137, upload-time = "2024-03-06T11:59:40.335Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/3c/fbb6686f91cb1e9ad84fe4b5a310d84b34293a522286125d5bea863ae94e/grex-1.0.1-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:2e74c197e2af83f70aff403f9d39a8a3f27fd0a3d4c1e35876ce4ca3ea990519", size = 1037055, upload-time = "2024-03-06T11:59:44.52Z" },
+    { url = "https://files.pythonhosted.org/packages/41/ae/898d328fb2e98fc481b614385b287f5ae2d64a63c51a70eef16ee37b7ba2/grex-1.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:4bac21757560dd4c778e5705cff5bc6379d609b400d1b888289860bc597c48ee", size = 977384, upload-time = "2024-03-06T11:59:48.891Z" },
+    { url = "https://files.pythonhosted.org/packages/05/19/07863c605bdffd3a3ae1217dc0f1bd8a98e6c0cddf9601e9aa2f88e13061/grex-1.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:88def29817c6811da8b4d6c73291e450f7ab5d59e3bb28361198c97abde4606c", size = 1855448, upload-time = "2024-03-06T11:59:53.78Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/d7/7abf0403e4655b3cb1bca8f57b7bace21321909b8359951ebfd97cffba67/grex-1.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f09f90fec83e0ccfab0593022f29fadab44e2a3657e41ab48a941df95d931b3f", size = 1905893, upload-time = "2024-03-06T11:59:58.772Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/b4/596bee979d63e687ead02b76522a8ee02901ed871bb04746ca914f1969c8/grex-1.0.1-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:9169487523589696d91b8108ad6f3e3eaa1aefe31ab0ea3a77e456b8ac1d2055", size = 1899872, upload-time = "2024-03-06T12:00:05.906Z" },
+    { url = "https://files.pythonhosted.org/packages/57/9b/8ad1b3acbb7756c687d54a3d888ee34715d519cf06182f1467c3ea363d34/grex-1.0.1-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:9cf9fdcb713a585037a88a64a60d5b1f2493bcdd31c80a82dd6da1b0ad8c88db", size = 2024002, upload-time = "2024-03-15T13:20:44.315Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/e0/4c9580be4f75347fa9596c849cc6c770c833e992fb6b4e465875aa5150ff/grex-1.0.1-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:03ff434950cf6874a7c10d67c55574c945c61403c7b27ce35f6f0c3cfb346970", size = 2026727, upload-time = "2024-03-15T13:20:49.077Z" },
+    { url = "https://files.pythonhosted.org/packages/99/35/5e515fd038766761317b4a17ac738b1e9255f4600d70835bb3fdbd21f9ea/grex-1.0.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:2bbe596e6dfa54c9842bf142d559746b0a7139d858ab7c760d9bdf89ec92eddb", size = 2075963, upload-time = "2024-03-15T13:20:58.648Z" },
+    { url = "https://files.pythonhosted.org/packages/84/c6/d6b02ed5ea5d9435875a457b5f93b605f2240bc042ee475fa917c98206a1/grex-1.0.1-cp312-none-win32.whl", hash = "sha256:2a806a4af4ae84b1db8a6aa752a6f169503dac29b6f909059b60c6be61b32a4e", size = 789419, upload-time = "2024-03-06T12:00:09.76Z" },
+    { url = "https://files.pythonhosted.org/packages/be/86/28cc8c6028c2cb4cbfc9e6ca0f0f73e9db2babf89a5200c2805efcb79fde/grex-1.0.1-cp312-none-win_amd64.whl", hash = "sha256:514e631edbd4b9fba67157c493e33cb3066899fabcea494c90427eacc4724187", size = 862352, upload-time = "2024-03-06T12:00:13.329Z" },
+]
+
+[[package]]
+name = "grex"
+version = "1.0.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/85/ef/70fba80ac31a53946f8bf27575469c541d9622b26eb22f0a8120b2220394/grex-1.0.2-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:d737e64fe4bcec8da0fae3e4c49a028c899623336d1500e8c0996f5c9b7963c5", size = 1065375, upload-time = "2025-11-14T12:27:08.014Z" },
+    { url = "https://files.pythonhosted.org/packages/99/b8/ad2e38d473459d26b061555f80c47343bf839ef790ec81486ac16be0b058/grex-1.0.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:ccfe8b16efe4757e5382d40989a2ae6001800fd8465a194d0ddcb33a1643fda3", size = 1007861, upload-time = "2025-11-14T12:27:09.337Z" },
+    { url = "https://files.pythonhosted.org/packages/05/2e/434c978eb449a0c51ebe50dcbe1c3a7f058b9340189e41ae81c45cbbed71/grex-1.0.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:95a7cdbe312b9af7992758cac41d7e27e87026a4adc5e36d726ffeea362a9d71", size = 1139465, upload-time = "2025-11-14T12:27:10.876Z" },
+    { url = "https://files.pythonhosted.org/packages/78/28/33ed2f2aeadef8f206a6ada8484aa5be7a687eb7c05813d30e9dc9e962ba/grex-1.0.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:88fb10b8e6471cf0efe76b1c7859058f77e0f9ea17d196fd10f4951d49837c72", size = 1162657, upload-time = "2025-11-14T12:27:12.271Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/00/d5479b3fb31e1f9c0472283d6f6dd7ae3a534d9e7929586a654422f8e5c1/grex-1.0.2-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:c79f988d272e41f38c404c9efef6fa34774aba05f1eb528f1e9ae3e4d187e3c4", size = 1321617, upload-time = "2025-11-14T12:27:13.795Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/28/c21646e7e550fea8ec0c933975bba3377e7573767949b02bde9968e84fe1/grex-1.0.2-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:3cd729adb670a0356d742e84cce17f16b661acc88dd1be79cc6ed6fa37f74f62", size = 1363531, upload-time = "2025-11-14T12:27:15.382Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/ca/9d649e195c150530f49b91f178d49e57d28a9a56d74fbc4a8e6850c309f2/grex-1.0.2-cp312-cp312-win_amd64.whl", hash = "sha256:b0cc3fa05c9df1452ca1cfcbc1a24c2086776ded10f89f24589846ea42f03d6f", size = 912337, upload-time = "2025-11-14T12:27:16.494Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/d3/ffc1ab471eb6757f2380d6edbcf42b5a0b507e2391655b72ed9cabb0d4ba/grex-1.0.2-cp312-cp312-win_arm64.whl", hash = "sha256:eb4d0593bace565da50eb05552818a2270cd670e73c071d878685809edba2ea2", size = 842693, upload-time = "2025-11-14T12:27:18.06Z" },
+    { url = "https://files.pythonhosted.org/packages/08/13/7b2457f9bf2c7c0dcb09427d077e459d0547fecd801c0dce897d5b405429/grex-1.0.2-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:cdc7d24234e7c37a4e640a1dd4beead073302324efefed60c5f39d1db2c3e7c1", size = 1065033, upload-time = "2025-11-14T12:27:19.365Z" },
+    { url = "https://files.pythonhosted.org/packages/81/c0/6aed2c7d944efa44bcdea641527392d9b59d5db057f79ccf67915e4a1d19/grex-1.0.2-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:06ca0094e7577a2f0e9d18b86a3988d0ccdcf73f96f5fbd26984142dfa7230ef", size = 1008109, upload-time = "2025-11-14T12:27:20.48Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/b4/77d7c092193c5cae23f6dcb7eb4dc28749172dc5af23b956d66b147a9ce9/grex-1.0.2-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c2de4976f5a29c29d85e2fbd5da8c73150cc61f286aceede6bbaa950040cbe53", size = 1138701, upload-time = "2025-11-14T12:27:21.979Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/e4/4b7168a9630fc7914e5bfe39ddb41cccfc614741ecc40322e159759785ee/grex-1.0.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:75e0540127fc038d61b17c91b41e6c0e0c7d9f676ec98e031ad9bc6d2cf058b2", size = 1162034, upload-time = "2025-11-14T12:27:23.654Z" },
+    { url = "https://files.pythonhosted.org/packages/da/7b/efc6f81e382ab5ed1f8eb5838205fba76342e1d6fa67aa5fe80cbffe1a11/grex-1.0.2-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:860e6a96198b792017d844485815b6e1cbb1ac3fad85fd893884f6746769477c", size = 1320606, upload-time = "2025-11-14T12:27:24.812Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/ff/2ae260c93476d07a898ffaa051c3320e56206f321e14a766e7cc6161bed2/grex-1.0.2-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:d933a884d5513106e53791405b2cd78ae8d5765a879a720ecc937837df3e3ef2", size = 1362892, upload-time = "2025-11-14T12:27:26.391Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/ee/e6d83b8ec7086996f98317b1eea76a505204fa5eed8b19f39030fe23cb7d/grex-1.0.2-cp313-cp313-win_amd64.whl", hash = "sha256:86b7a03cdf6d495368f0d552ef979957b008ae5a1f7fc1d7acd8c2b93e57b2ca", size = 912204, upload-time = "2025-11-14T12:27:27.816Z" },
+    { url = "https://files.pythonhosted.org/packages/18/f8/cba1d87827ae46e78636f331661f3393f89485bd30129e4a8b1745d0df63/grex-1.0.2-cp313-cp313-win_arm64.whl", hash = "sha256:c0cf90c17efa84508b09c4417aafc10c21863d08e82b5bb6921aeb2b2c77e3f6", size = 842307, upload-time = "2025-11-14T12:27:29.516Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/fe/571fc3f8189267d7377b79da9581e010de9db7f72f91f586963ad411f447/grex-1.0.2-cp314-cp314-macosx_10_12_x86_64.whl", hash = "sha256:47ce10641329b59670e95535f233317dccfbb51267e3d632bd7324012d0a96a5", size = 1063005, upload-time = "2025-11-14T12:27:30.867Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/2c/bc433860f82d7403593eac4057525889a4128981776c0a9c8bf846819ea4/grex-1.0.2-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:9ea809fd2534369b4cc7d41b67b474af05d8fda8277f31258e6864d1e8385c87", size = 1006940, upload-time = "2025-11-14T12:27:32.331Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/1f/78340b899e0fb142377fbcfccea590dca091ae1e855da6b84012739e4230/grex-1.0.2-cp314-cp314-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9eb091b96913485a55498f6a15ca13694ec9d9479143b5f973c044cb8a40e092", size = 1137254, upload-time = "2025-11-14T12:27:33.852Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/b0/ffeae07ee466fdb17888ff7f181693e0f1741eaa463442426ebaff4bf7b6/grex-1.0.2-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f80bb501a28b560780c78b69ae2ad8f8bba861e05c8a2507abe1d383772a9bbd", size = 1160649, upload-time = "2025-11-14T12:27:35.034Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/d7/9282cc624b8f2a78cd12a72d3af9a4925b4662b0924120ab52529274bd0b/grex-1.0.2-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:594fd1c3f4e310330a223f088ccbedd289148e74d0e213f00d265f45b8d3a607", size = 1319329, upload-time = "2025-11-14T12:27:36.496Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/86/b7c263bd9644ceb8a7004d06e5a08fa2392f89af852147e44f0b59247f5d/grex-1.0.2-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:5bbb5f48446632b361658ce79e43fdacda89c93944886b3374bd74183e64412b", size = 1361758, upload-time = "2025-11-14T12:27:37.666Z" },
+    { url = "https://files.pythonhosted.org/packages/93/0f/43d5895f49bb0c7357b1528ba94629e981b0c2630a254c23db0505bc2116/grex-1.0.2-cp314-cp314-win_amd64.whl", hash = "sha256:bf9c3be6bfd4e28ab8eeb9eb6ff6f7d3579db5a03ca613845e8445624ac355d9", size = 909563, upload-time = "2025-11-14T12:27:38.848Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/83/02d5a3da0c03bcd5651ed6bb21960ba190f6c13b99f48613597ee8c6a1e5/grex-1.0.2-cp314-cp314-win_arm64.whl", hash = "sha256:538b4498bb879e4209fb2497836302fe7be1568496ad1d75919cabac34d3e18a", size = 841385, upload-time = "2025-11-14T12:27:39.986Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/2e/cc5fd4b358d428a3a15666054df9ae80f0ed80e71f6dc3e033e85df121f6/grex-1.0.2-pp311-pypy311_pp73-macosx_10_12_x86_64.whl", hash = "sha256:ab7e6d31cf8408b01a471693139c5f52774e5835ae5846f82a30cbd6616200f9", size = 1068269, upload-time = "2025-11-14T12:27:41.214Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/65/803df406e7c352b579c898c4aba6fe35e23695d20622e4b1356c44be9820/grex-1.0.2-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:0616cd666c192598749d69a84519a4516dbee7a140a068c9a2137d9f3de31830", size = 1012043, upload-time = "2025-11-14T12:27:42.816Z" },
+    { url = "https://files.pythonhosted.org/packages/82/ef/771cee99beffb46aa426d87dcb289bfbd89f06a05150a7e9033b9ff6a10d/grex-1.0.2-pp311-pypy311_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:916a9b35fcd4a5787cf28d4644a4352bb411b972eca9028f4571f2058028e872", size = 1142459, upload-time = "2025-11-14T12:27:44.004Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/f6/15950baf80be8336f5e8caa96e3143252cba8d36198621bfe56c192474bb/grex-1.0.2-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:acb6cd07df5aaea64282753b6c0580ce0c4048c897fbadc7d95a4fdfb94e6068", size = 1165152, upload-time = "2025-11-14T12:27:45.726Z" },
+    { url = "https://files.pythonhosted.org/packages/82/85/3bd00481191ad3a5501eb2076b928ab0b2bc18bef61a4d5cd1b693861530/grex-1.0.2-pp311-pypy311_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:c5ae86fd4f6f2bc39a542bcdd36d2aaaa9452bd628c56373c2ed4a71ef360e0c", size = 1324871, upload-time = "2025-11-14T12:27:47.201Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/0c/deeb934e208437e0bd1873796e455dfb9ca42c1259a55ebf729eb3f0bdd6/grex-1.0.2-pp311-pypy311_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:a3cced9d51f763f40df96e7aeb17d17ae73cefdb0a1751b985b2cba5db6a0405", size = 1364788, upload-time = "2025-11-14T12:27:48.48Z" },
+]
+
+[[package]]
 name = "h11"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -609,6 +679,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/a4/1e/1bac1a839d12e6a82ec6cb40cda2edde64a2013a66963293696bbf31fbbb/pandas-2.3.3-cp314-cp314t-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2e3ebdb170b5ef78f19bfb71b0dc5dc58775032361fa188e814959b74d726dd5", size = 12121582, upload-time = "2025-09-29T23:30:43.391Z" },
     { url = "https://files.pythonhosted.org/packages/44/91/483de934193e12a3b1d6ae7c8645d083ff88dec75f46e827562f1e4b4da6/pandas-2.3.3-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:d051c0e065b94b7a3cea50eb1ec32e912cd96dba41647eb24104b6c6c14c5788", size = 12699963, upload-time = "2025-09-29T23:31:10.009Z" },
     { url = "https://files.pythonhosted.org/packages/70/44/5191d2e4026f86a2a109053e194d3ba7a31a2d10a9c2348368c63ed4e85a/pandas-2.3.3-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:3869faf4bd07b3b66a9f462417d0ca3a9df29a9f6abd5d0d0dbab15dac7abe87", size = 13202175, upload-time = "2025-09-29T23:31:59.173Z" },
+]
+
+[[package]]
+name = "pandas-stubs"
+version = "2.3.3.260113"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "types-pytz" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/92/5d/be23854a73fda69f1dbdda7bc10fbd6f930bd1fa87aaec389f00c901c1e8/pandas_stubs-2.3.3.260113.tar.gz", hash = "sha256:076e3724bcaa73de78932b012ec64b3010463d377fa63116f4e6850643d93800", size = 116131, upload-time = "2026-01-13T22:30:16.704Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d1/c6/df1fe324248424f77b89371116dab5243db7f052c32cc9fe7442ad9c5f75/pandas_stubs-2.3.3.260113-py3-none-any.whl", hash = "sha256:ec070b5c576e1badf12544ae50385872f0631fc35d99d00dc598c2954ec564d3", size = 168246, upload-time = "2026-01-13T22:30:15.244Z" },
 ]
 
 [[package]]
@@ -1064,10 +1147,12 @@ wheels = [
 
 [[package]]
 name = "texthunter"
-version = "0.1.4"
+version = "0.2"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
+    { name = "grex", version = "1.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "grex", version = "1.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "openpyxl" },
     { name = "pandas" },
 ]
@@ -1075,13 +1160,16 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "httpx" },
+    { name = "pandas-stubs" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
+    { name = "types-openpyxl" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.0" },
+    { name = "grex", specifier = ">=1.0.1" },
     { name = "openpyxl", specifier = ">=3.1.0" },
     { name = "pandas", specifier = ">=2.2.0" },
 ]
@@ -1089,8 +1177,10 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "httpx", specifier = ">=0.27.0" },
+    { name = "pandas-stubs", specifier = ">=2.3.3.260113" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.24.0" },
+    { name = "types-openpyxl", specifier = ">=3.1.5.20250919" },
 ]
 
 [[package]]
@@ -1106,6 +1196,24 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/36/bf/8825b5929afd84d0dabd606c67cd57b8388cb3ec385f7ef19c5cc2202069/typer-0.21.1.tar.gz", hash = "sha256:ea835607cd752343b6b2b7ce676893e5a0324082268b48f27aa058bdb7d2145d", size = 110371, upload-time = "2026-01-06T11:21:10.989Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a0/1d/d9257dd49ff2ca23ea5f132edf1281a0c4f9de8a762b9ae399b670a59235/typer-0.21.1-py3-none-any.whl", hash = "sha256:7985e89081c636b88d172c2ee0cfe33c253160994d47bdfdc302defd7d1f1d01", size = 47381, upload-time = "2026-01-06T11:21:09.824Z" },
+]
+
+[[package]]
+name = "types-openpyxl"
+version = "3.1.5.20250919"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c4/12/8bc4a25d49f1e4b7bbca868daa3ee80b1983d8137b4986867b5b65ab2ecd/types_openpyxl-3.1.5.20250919.tar.gz", hash = "sha256:232b5906773eebace1509b8994cdadda043f692cfdba9bfbb86ca921d54d32d7", size = 100880, upload-time = "2025-09-19T02:54:39.997Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/36/3c/d49cf3f4489a10e9ddefde18fd258f120754c5825d06d145d9a0aaac770b/types_openpyxl-3.1.5.20250919-py3-none-any.whl", hash = "sha256:bd06f18b12fd5e1c9f0b666ee6151d8140216afa7496f7ebb9fe9d33a1a3ce99", size = 166078, upload-time = "2025-09-19T02:54:38.657Z" },
+]
+
+[[package]]
+name = "types-pytz"
+version = "2025.2.0.20251108"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/40/ff/c047ddc68c803b46470a357454ef76f4acd8c1088f5cc4891cdd909bfcf6/types_pytz-2025.2.0.20251108.tar.gz", hash = "sha256:fca87917836ae843f07129567b74c1929f1870610681b4c92cb86a3df5817bdb", size = 10961, upload-time = "2025-11-08T02:55:57.001Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e7/c1/56ef16bf5dcd255155cc736d276efa6ae0a5c26fd685e28f0412a4013c01/types_pytz-2025.2.0.20251108-py3-none-any.whl", hash = "sha256:0f1c9792cab4eb0e46c52f8845c8f77cf1e313cb3d68bf826aa867fe4717d91c", size = 10116, upload-time = "2025-11-08T02:55:56.194Z" },
 ]
 
 [[package]]

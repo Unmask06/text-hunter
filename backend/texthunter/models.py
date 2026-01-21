@@ -47,7 +47,7 @@ class RegexGuessResponse(BaseModel):
     """Response from regex guess endpoint."""
 
     pattern: str = Field(..., description="Generated regex pattern")
-    explanation: str = Field(..., description="Human-readable explanation")
+    explanation: str = Field(..., description="Explanation of the generated pattern")
     test_results: dict[str, bool] = Field(
         ..., description="Which examples match the generated pattern"
     )

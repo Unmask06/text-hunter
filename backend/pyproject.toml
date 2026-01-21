@@ -29,3 +29,4 @@ quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
 [tool.ruff.lint]
+select = ["E", "F", "W", "C90", "B", "I", "Q", "D"]

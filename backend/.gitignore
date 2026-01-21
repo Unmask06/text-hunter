@@ -27,3 +27,6 @@ dist/
 # cache files pyc files
 # (remove specific file ignores; covered by patterns above)
 *.log
+
+# Notebooks
+trail.ipynb

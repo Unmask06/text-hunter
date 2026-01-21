@@ -1,4 +1,4 @@
-"""Allow running texthunter as a module: python -m texthunter"""
+"""Allow running texthunter as a module: python -m texthunter."""
 
 import uvicorn
 

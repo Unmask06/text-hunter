@@ -9,19 +9,19 @@ import FileUpload from "./components/FileUpload.vue";
 import RegexConfig from "./components/RegexConfig.vue";
 import ResultsTable from "./components/ResultsTable.vue";
 import {
-  checkHealth,
-  exportExcel,
-  extractAllMatches,
-  extractMatches,
+    checkHealth,
+    exportExcel,
+    extractAllMatches,
+    extractMatches,
 } from "./services/api.js";
 import {
-  deletePdf,
-  FileStatus,
-  getAllExtractedText,
-  getAllPdfs,
-  getPdfById,
-  storeExtractedText,
-  updatePdfStatus,
+    deletePdf,
+    FileStatus,
+    getAllExtractedText,
+    getAllPdfs,
+    getPdfById,
+    storeExtractedText,
+    updatePdfStatus,
 } from "./services/db.js";
 
 // State
@@ -219,7 +219,7 @@ async function handleExport() {
         <div>
           <h1 class="text-xl font-bold text-primary-100">TextHunter</h1>
           <p class="text-sm text-primary-400">
-            Hunt and extract text patterns from PDFs
+            Hunt and extract text patterns from PDFs - v0.3
           </p>
         </div>
       </div>

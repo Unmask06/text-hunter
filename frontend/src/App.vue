@@ -33,6 +33,7 @@ const isExtracting = ref(false);
 const isExporting = ref(false);
 const currentConfig = ref({ keywordRegex: "", fileIdentifierRegex: null });
 const backendStatus = ref("checking"); // 'checking', 'online', 'offline'
+const isLoadingFiles = ref(false);
 
 // Web Worker for PDF processing
 let pdfWorker = null;
@@ -65,7 +66,12 @@ onUnmounted(() => {
 });
 
 async function loadFiles() {
-  files.value = await getAllPdfs();
+  isLoadingFiles.value = true;
+  try {
+    files.value = await getAllPdfs();
+  } finally {
+    isLoadingFiles.value = false;
+  }
 }
 
 function initPdfWorker() {
@@ -248,7 +254,11 @@ async function handleExport() {
       <aside class="w-80 shrink-0 flex flex-col gap-4">
         <FileUpload @file-added="handleFileAdded" />
         <div class="glass-card p-4 flex-1 overflow-y-auto">
-          <FileList :files="files" @delete-file="handleDeleteFile" />
+          <FileList
+            :files="files"
+            :is-loading="isLoadingFiles"
+            @delete-file="handleDeleteFile"
+          />
         </div>
       </aside>
 

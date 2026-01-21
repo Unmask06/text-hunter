@@ -7,15 +7,15 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from .excel_generator import generate_excel
-from .models import (
+from texthunter.excel_generator import generate_excel
+from texthunter.models import (
     ExportRequest,
     ExtractionRequest,
     ExtractionResponse,
     RegexGuessRequest,
     RegexGuessResponse,
 )
-from .regex_engine import extract_matches, guess_regex
+from texthunter.regex_engine import extract_matches, guess_regex
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,7 @@ async def health_check():
 
 @router.post("/extract", response_model=ExtractionResponse)
 async def extract_data(payload: ExtractionRequest):
-    """
-    Run regex extraction on provided text content.
+    """Run regex extraction on provided text content.
 
     Returns a preview of the first 10 matches.
     """
@@ -66,8 +65,7 @@ async def extract_data(payload: ExtractionRequest):
 
 @router.post("/extract-all")
 async def extract_all_data(payload: ExtractionRequest):
-    """
-    Run regex extraction and return all matches.
+    """Run regex extraction and return all matches.
 
     Use this endpoint when preparing for export.
     """
@@ -99,8 +97,7 @@ async def extract_all_data(payload: ExtractionRequest):
 
 @router.post("/guess-regex", response_model=RegexGuessResponse)
 async def generate_regex(payload: RegexGuessRequest):
-    """
-    Generate a regex pattern from example strings.
+    """Generate a regex pattern from example strings.
 
     Requires at least 2 examples.
     """
@@ -129,9 +126,7 @@ async def generate_regex(payload: RegexGuessRequest):
 
 @router.post("/export")
 async def export_excel(payload: ExportRequest):
-    """
-    Generate and stream an Excel file from match results.
-    """
+    """Generate and stream an Excel file from match results."""
     logger.info("Export request: %d matches", len(payload.matches))
 
     if not payload.matches:

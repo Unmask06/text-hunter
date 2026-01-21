@@ -2,7 +2,7 @@
 
 import pytest
 
-from textextract.regex_engine import extract_matches, guess_regex
+from texthunter.regex_engine import extract_matches, guess_regex
 
 
 class TestExtractMatches:
@@ -76,16 +76,26 @@ class TestGuessRegex:
         examples = ['10"-FG-001', '2"-CWS-505']
         pattern, explanation = guess_regex(examples)
 
-        assert r"\d+" in pattern
-        assert "-" in pattern or r"\-" in pattern
+        assert "grex" in explanation.lower()
+        # Pattern should be valid regex
+        import re
+
+        compiled = re.compile(pattern)
+        for ex in examples:
+            assert compiled.fullmatch(ex), f"Pattern {pattern} did not match {ex}"
 
     def test_simple_pattern(self):
         """Test guessing pattern for simple strings."""
         examples = ["ABC-001", "DEF-002", "GHI-003"]
         pattern, explanation = guess_regex(examples)
 
-        assert "[A-Z]" in pattern
-        assert r"\d+" in pattern
+        assert "grex" in explanation.lower()
+        # Pattern should be valid regex
+        import re
+
+        compiled = re.compile(pattern)
+        for ex in examples:
+            assert compiled.fullmatch(ex), f"Pattern {pattern} did not match {ex}"
 
     def test_minimum_examples(self):
         """Test that at least 2 examples are required."""
@@ -101,4 +111,4 @@ class TestGuessRegex:
 
         compiled = re.compile(pattern)
         for ex in examples:
-            assert compiled.search(ex), f"Pattern {pattern} did not match {ex}"
+            assert compiled.fullmatch(ex), f"Pattern {pattern} did not match {ex}"

@@ -2,18 +2,42 @@
  * Dexie.js database configuration for IndexedDB storage.
  * Stores PDF files and extracted text locally in the browser.
  */
-import Dexie from 'dexie';
+import { Dexie, type EntityTable } from 'dexie';
 
-/** @type {Dexie} */
-export const db = new Dexie('TextExtractorDB');
+export interface PdfRecord {
+    id?: number;
+    name: string;
+    size: number;
+    blob: ArrayBuffer;
+    status: string;
+    pageCount: number;
+    uploadedAt: string;
+}
 
-// Define database schema
-db.version(1).stores({
-    // PDF files stored as blobs
-    pdfs: '++id, name, size, status, pageCount, uploadedAt',
-    // Extracted text content per page
-    extractedText: '++id, pdfId, pageNo, text',
-});
+export interface ExtractedTextRecord {
+    id?: number;
+    pdfId: number;
+    pageNo: number;
+    text: string;
+}
+
+// Define the Database Class
+class TextHunterDatabase extends Dexie {
+    // We use EntityTable to link our Interfaces to the Table names
+    pdfs!: EntityTable<PdfRecord, 'id'>;
+    extractedText!: EntityTable<ExtractedTextRecord, 'id'>;
+
+    constructor() {
+        super('TextExtractorDB');
+        this.version(1).stores({
+            pdfs: '++id, name, status', // Only index fields you plan to filter by
+            extractedText: '++id, pdfId'
+        });
+    }
+}
+
+export const db = new TextHunterDatabase();
+
 
 /**
  * PDF file status enum
@@ -27,20 +51,20 @@ export const FileStatus = {
 
 /**
  * Add a PDF file to the database
- * @param {File} file - The PDF file to add
- * @returns {Promise<number>} The ID of the added record
+ * @param file - The PDF file to add
+ * @returns The ID of the added record
  */
-export async function addPdfFile(file) {
+export async function addPdfFile(file: File): Promise<number> {
     const arrayBuffer = await file.arrayBuffer();
 
-    return db.pdfs.add({
+    return (await db.pdfs.add({
         name: file.name,
         size: file.size,
         blob: arrayBuffer,
         status: FileStatus.PENDING,
         pageCount: 0,
         uploadedAt: new Date().toISOString(),
-    });
+    })) as number;
 }
 
 /**
@@ -49,24 +73,24 @@ export async function addPdfFile(file) {
  * @param {string} status - The new status
  * @param {Object} [extra] - Additional fields to update
  */
-export async function updatePdfStatus(id, status, extra = {}) {
-    return db.pdfs.update(id, { status, ...extra });
+export async function updatePdfStatus(id: number, status: string, extra: object = {}): Promise<number> {
+    return (await db.pdfs.update(id, { status, ...extra })) as number;
 }
 
 /**
  * Get all PDF files
- * @returns {Promise<Array>}
+ * @returns List of all PDF records
  */
-export async function getAllPdfs() {
+export async function getAllPdfs(): Promise<PdfRecord[]> {
     return db.pdfs.toArray();
 }
 
 /**
  * Get a PDF file by ID
- * @param {number} id
- * @returns {Promise<Object>}
+ * @param id - The PDF record ID
+ * @returns The PDF record or undefined if not found
  */
-export async function getPdfById(id) {
+export async function getPdfById(id: number): Promise<PdfRecord | undefined> {
     return db.pdfs.get(id);
 }
 
@@ -74,7 +98,7 @@ export async function getPdfById(id) {
  * Delete a PDF and its extracted text
  * @param {number} id
  */
-export async function deletePdf(id) {
+export async function deletePdf(id: number): Promise<void> {
     await db.extractedText.where('pdfId').equals(id).delete();
     await db.pdfs.delete(id);
 }
@@ -85,18 +109,18 @@ export async function deletePdf(id) {
  * @param {number} pageNo
  * @param {string} text
  */
-export async function storeExtractedText(pdfId, pageNo, text) {
-    return db.extractedText.add({ pdfId, pageNo, text });
+export async function storeExtractedText(pdfId: number, pageNo: number, text: string): Promise<number> {
+    return (await db.extractedText.add({ pdfId, pageNo, text })) as number;
 }
 
 /**
  * Get all extracted text for a PDF
- * @param {number} pdfId
- * @returns {Promise<Object>} Map of pageNo -> text
+ * @param pdfId - The PDF record ID
+ * @returns Map of page number to text content
  */
-export async function getExtractedTextForPdf(pdfId) {
+export async function getExtractedTextForPdf(pdfId: number): Promise<Record<number, string>> {
     const records = await db.extractedText.where('pdfId').equals(pdfId).toArray();
-    const textMap = {};
+    const textMap: Record<number, string> = {};
     for (const record of records) {
         textMap[record.pageNo] = record.text;
     }
@@ -105,14 +129,16 @@ export async function getExtractedTextForPdf(pdfId) {
 
 /**
  * Get all extracted text from all ready PDFs
- * @returns {Promise<Object>} Map of filename -> {pageNo: text}
+ * @returns Map of filename to extracted text by page number
  */
-export async function getAllExtractedText() {
+export async function getAllExtractedText(): Promise<Record<string, Record<number, string>>> {
     const pdfs = await db.pdfs.where('status').equals(FileStatus.READY).toArray();
-    const result = {};
+    const result: Record<string, Record<number, string>> = {};
 
     for (const pdf of pdfs) {
-        result[pdf.name] = await getExtractedTextForPdf(pdf.id);
+        if (pdf.id !== undefined) {
+            result[pdf.name] = await getExtractedTextForPdf(pdf.id);
+        }
     }
 
     return result;
@@ -121,7 +147,7 @@ export async function getAllExtractedText() {
 /**
  * Clear all data from the database
  */
-export async function clearAllData() {
+export async function clearAllData(): Promise<void> {
     await db.extractedText.clear();
     await db.pdfs.clear();
 }

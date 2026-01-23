@@ -35,12 +35,12 @@ Purpose: help an AI coding agent be immediately productive in this mono-repo (Vu
   4. Adjust frontend API calls in `frontend/src/services/api.ts` and the UI components under `frontend/src/components/`.
 
 - **Key files to inspect (start here)**
-  - [Frontend API client](frontend/src/services/api.ts)
-  - [Frontend IndexedDB schema](frontend/src/services/db.ts)
-  - [Frontend package.json (scripts)](frontend/package.json)
-  - [FastAPI app & CORS](backend/texthunter/main.py)
-  - [API routes](backend/texthunter/routes.py)
-  - [Regex logic](backend/texthunter/regex_engine.py)
-  - [Models (Pydantic)](backend/texthunter/models.py)
-  - [Excel export](backend/texthunter/excel_generator.py)
+  - [Frontend API client](../frontend/src/services/api.ts)
+  - [Frontend IndexedDB schema](../frontend/src/services/db.ts)
+  - [Frontend package.json (scripts)](../frontend/package.json)
+  - [FastAPI app & CORS](../backend/texthunter/main.py)
+  - [API routes](../backend/texthunter/routes.py)
+  - [Regex logic](../backend/texthunter/regex_engine.py)
+  - [Models (Pydantic)](../backend/texthunter/models.py)
+  - [Excel export](../backend/texthunter/excel_generator.py)
 

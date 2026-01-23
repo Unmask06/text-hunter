@@ -89,7 +89,7 @@ function useSuggestedPattern() {
 </script>
 
 <template>
-  <div class="glass-card p-6 space-y-6">
+  <div class="config-card p-6 space-y-6">
     <h2 class="text-lg font-semibold text-primary-100">Regex Configuration</h2>
 
     <!-- Mode Toggle -->
@@ -103,44 +103,43 @@ function useSuggestedPattern() {
     </div>
 
     <!-- Manual Mode -->
-    <div v-if="mode === 'manual'" class="space-y-4 fade-in">
+    <div v-if="mode === 'manual'" class="space-y-4 animate-fade-in">
       <div>
-        <label class="block text-sm font-medium text-primary-300 mb-2">
+        <label class="input-label">
           Keyword Regex <span class="text-accent-500">*</span>
         </label>
-        <input v-model="keywordRegex" type="text" class="input-field w-full" placeholder='e.g., \d+"-[A-Z]+-\d+'
+        <input v-model="keywordRegex" type="text" class="input-field" placeholder='e.g., \d+"-[A-Z]+-\d+'
           :disabled="disabled" />
-        <p class="text-xs text-primary-500 mt-1">
+        <p class="helper-text">
           Pattern to find in PDF text content
         </p>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-primary-300 mb-2">
+        <label class="input-label">
           File Identifier Regex <span class="text-primary-500">(optional)</span>
         </label>
-        <input v-model="fileIdentifierRegex" type="text" class="input-field w-full" placeholder='e.g., ^(\d{4})_([^_]+)'
+        <input v-model="fileIdentifierRegex" type="text" class="input-field" placeholder='e.g., ^(\d{4})_([^_]+)'
           :disabled="disabled" />
-        <p class="text-xs text-primary-500 mt-1">
+        <p class="helper-text">
           Extract metadata from filenames (groups become columns)
         </p>
       </div>
     </div>
 
     <!-- Helper Mode -->
-    <div v-else class="space-y-4 fade-in">
+    <div v-else class="space-y-4 animate-fade-in">
       <div>
-        <label class="block text-sm font-medium text-primary-300 mb-2">
+        <label class="input-label">
           Example Strings
         </label>
-        <p class="text-xs text-primary-500 mb-3">
+        <p class="helper-text mb-3">
           Enter 2-3 examples of the text you want to match
         </p>
 
         <div class="space-y-2">
-          <input v-for="(_, index) in examples" :key="index" v-model="examples[index]" type="text"
-            class="input-field w-full" :placeholder="`Example ${index + 1}: e.g., 10&quot;-FG-001`"
-            :disabled="disabled || isGenerating" />
+          <input v-for="(_, index) in examples" :key="index" v-model="examples[index]" type="text" class="input-field"
+            :placeholder="`Example ${index + 1}: e.g., 10&quot;-FG-001`" :disabled="disabled || isGenerating" />
         </div>
       </div>
 
@@ -154,48 +153,48 @@ function useSuggestedPattern() {
       </div>
 
       <!-- Suggested Pattern Result -->
-      <div v-if="suggestedPattern" class="bg-surface-800 rounded-lg p-4 space-y-3">
+      <div v-if="suggestedPattern" class="suggested-card">
         <div>
-          <label class="block text-xs font-medium text-primary-400 mb-1">
+          <label class="badge-label">
             Suggested Pattern
           </label>
-          <code class="block text-accent-400 font-mono text-sm bg-surface-900 p-2 rounded">
+          <code class="pattern-display">
             {{ suggestedPattern }}
           </code>
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-primary-400 mb-1">
+          <label class="badge-label">
             Explanation
           </label>
           <p class="text-primary-300 text-sm">{{ patternExplanation }}</p>
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-primary-400 mb-1">
+          <label class="badge-label">
             Test Results
           </label>
           <div class="flex flex-wrap gap-2">
             <span v-for="(matched, example) in testResults" :key="example" :class="[
-              'text-xs px-2 py-1 rounded',
-              matched ? 'bg-success-500/20 text-success-500' : 'bg-error-500/20 text-error-500'
+              'result-badge',
+              matched ? 'badge-success' : 'badge-error'
             ]">
               {{ example }}: {{ matched ? '✓' : '✗' }}
             </span>
           </div>
         </div>
 
-        <button class="text-sm text-accent-400 hover:text-accent-300 underline" @click="useSuggestedPattern">
+        <button class="use-pattern-link" @click="useSuggestedPattern">
           Use this pattern in Manual mode
         </button>
       </div>
 
       <!-- File Identifier in Helper Mode -->
       <div>
-        <label class="block text-sm font-medium text-primary-300 mb-2">
+        <label class="input-label">
           File Identifier Regex <span class="text-primary-500">(optional)</span>
         </label>
-        <input v-model="fileIdentifierRegex" type="text" class="input-field w-full" placeholder='e.g., ^(\d{4})_([^_]+)'
+        <input v-model="fileIdentifierRegex" type="text" class="input-field" placeholder='e.g., ^(\d{4})_([^_]+)'
           :disabled="disabled" />
       </div>
     </div>
@@ -212,3 +211,77 @@ function useSuggestedPattern() {
     </button>
   </div>
 </template>
+
+<style scoped>
+@reference "@/style.css";
+
+.config-card {
+  @apply bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl;
+}
+
+.toggle-group {
+  @apply inline-flex bg-slate-800 rounded-lg p-1;
+}
+
+.toggle-btn {
+  @apply px-4 py-2 rounded-md font-medium transition-all duration-200 text-slate-400;
+}
+
+.toggle-btn.active {
+  @apply bg-indigo-600 text-white shadow-lg;
+}
+
+.input-label {
+  @apply block text-sm font-medium text-slate-300 mb-2;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 rounded-lg bg-slate-800 border border-white/10 text-slate-100 font-mono;
+  @apply transition-all duration-200 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20;
+  @apply placeholder:text-slate-500 disabled:opacity-50;
+}
+
+.helper-text {
+  @apply text-xs text-slate-500 mt-1;
+}
+
+.btn-primary {
+  @apply px-6 py-3 rounded-lg font-semibold text-white cursor-pointer;
+  @apply bg-linear-to-br from-indigo-500 to-indigo-600 border border-white/10 shadow-lg;
+  @apply transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-indigo-500/20 active:translate-y-0 disabled:opacity-50;
+}
+
+.btn-accent {
+  @apply px-6 py-3 rounded-lg font-semibold text-white;
+  @apply bg-linear-to-br from-cyan-500 to-cyan-600 border border-white/10 shadow-lg;
+  @apply transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-cyan-500/20 disabled:opacity-50;
+}
+
+.suggested-card {
+  @apply bg-slate-800 rounded-xl p-4 space-y-4 border border-white/5;
+}
+
+.badge-label {
+  @apply block text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1.5;
+}
+
+.pattern-display {
+  @apply block text-cyan-400 font-mono text-sm bg-slate-950 p-3 rounded-lg border border-white/5;
+}
+
+.result-badge {
+  @apply text-xs px-2.5 py-1 rounded-full font-medium;
+}
+
+.badge-success {
+  @apply bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
+}
+
+.badge-error {
+  @apply bg-red-500/10 text-red-400 border border-red-500/20;
+}
+
+.use-pattern-link {
+  @apply text-sm text-cyan-400 hover:text-cyan-300 underline underline-offset-4 transition-colors;
+}
+</style>

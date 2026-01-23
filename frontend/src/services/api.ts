@@ -1,8 +1,8 @@
 /**
  * API service layer for communicating with the FastAPI backend.
  */
-import axios from "axios";
 import type { components } from "@/types/api.ts";
+import axios from "axios";
 
 type Schemas = components["schemas"];
 
@@ -28,7 +28,9 @@ console.log(API_BASE_URL);
  * @param payload.file_identifier_regex - Optional regex for filename metadata
  * @param payload.text_content - Map of filename -> {page: text}
  */
-export async function extractMatches(payload:Schemas["ExtractionRequest"]): Promise<Schemas["ExtractionResponse"]> {
+export async function extractMatches(
+  payload: Schemas["ExtractionRequest"],
+): Promise<Schemas["ExtractionResponse"]> {
   const response = await api.post("/extract", payload);
   return response.data;
 }

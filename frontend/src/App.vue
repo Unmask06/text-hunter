@@ -239,7 +239,7 @@ async function handleExport() {
     <!-- Main Content -->
     <main class="container mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 px-6 py-8">
       <!-- Left Column: Controls -->
-      <aside class="lg:col-span-4 space-y-8">
+      <aside class="lg:col-span-3 space-y-6">
         <section>
           <FileUpload :disabled="backendStatus === 'offline'" @file-added="handleFileAdded" />
         </section>
@@ -267,11 +267,6 @@ async function handleExport() {
           </p>
           <p class="text-xs text-slate-600">Built for high-performance PDF data extraction</p>
         </div>
-        <div class="tech-stack">
-          <span>Vue 3</span>
-          <span>FastAPI</span>
-          <span>Tailwind CSS</span>
-        </div>
       </div>
     </footer>
   </div>
@@ -285,7 +280,7 @@ async function handleExport() {
 }
 
 .main-header {
-  @apply py-6 border-b border-white/5 bg-slate-900/40 backdrop-blur-md sticky top-0 z-50;
+  @apply py-4 border-b border-white/5 bg-slate-900/40 backdrop-blur-md sticky top-0 z-50;
 }
 
 .logo-container {
@@ -325,13 +320,5 @@ async function handleExport() {
 
 .copyright {
   @apply text-sm font-semibold text-slate-500;
-}
-
-.tech-stack {
-  @apply flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-600;
-}
-
-.tech-stack span {
-  @apply px-2.5 py-1 rounded-md bg-slate-900 border border-white/5 shadow-inner;
 }
 </style>

@@ -1,6 +1,6 @@
 [project]
 name = "texthunter"
-version = "0.3"
+version = "0.4"
 description = "P&ID Text Extractor - Backend API for regex matching and Excel generation"
 readme = "README.md"
 requires-python = ">=3.11"

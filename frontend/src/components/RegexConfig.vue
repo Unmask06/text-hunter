@@ -3,7 +3,7 @@
  * RegexConfig.vue - Regex configuration panel with manual and helper modes
  */
 import { computed, ref, watch } from 'vue';
-import { guessRegex } from '../services/api.js';
+import { guessRegex } from '../services/api.ts';
 
 const props = defineProps({
   disabled: {

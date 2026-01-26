@@ -13,7 +13,7 @@ import {
   exportExcel,
   extractAllMatches,
   extractMatches,
-} from "./services/api.js";
+} from "./services/api.ts";
 import {
   deletePdf,
   FileStatus,
@@ -22,7 +22,7 @@ import {
   getPdfById,
   storeExtractedText,
   updatePdfStatus,
-} from "./services/db.js";
+} from "./services/db.ts";
 
 // State
 const files = ref([]);

@@ -3,7 +3,14 @@
  * FileUpload.vue - Drag-and-drop PDF upload zone
  */
 import { computed, ref } from 'vue';
-import { addPdfFile } from '../services/db.js';
+import { addPdfFile } from '../services/db';
+
+const props = defineProps({
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 const emit = defineEmits(['file-added', 'file-error']);
 
@@ -18,6 +25,7 @@ const errorMessage = ref('');
 const dropZoneClasses = computed(() => ({
   'drop-zone': true,
   'drag-over': isDragOver.value,
+  'disabled': props.disabled,
 }));
 
 function formatFileSize(bytes) {
@@ -27,15 +35,18 @@ function formatFileSize(bytes) {
 }
 
 function handleDragOver(event) {
+  if (props.disabled) return;
   event.preventDefault();
   isDragOver.value = true;
 }
 
 function handleDragLeave() {
+  if (props.disabled) return;
   isDragOver.value = false;
 }
 
 async function handleDrop(event) {
+  if (props.disabled) return;
   event.preventDefault();
   isDragOver.value = false;
 
@@ -47,6 +58,7 @@ async function handleDrop(event) {
 }
 
 async function handleFileSelect(event) {
+  if (props.disabled) return;
   const files = Array.from(event.target.files);
   await processFiles(files);
   event.target.value = ''; // Reset input
@@ -111,9 +123,9 @@ async function processFiles(files) {
 
       <div class="text-center">
         <p class="text-slate-200 font-medium text-sm">
-          {{ isUploading ? 'Uploading...' : 'Drop PDF files here' }}
+          {{ props.disabled ? 'Upload disabled - backend offline' : (isUploading ? 'Uploading...' : 'Drop PDF files here') }}
         </p>
-        <p class="text-slate-400 text-xs">or click to browse</p>
+        <p v-if="!props.disabled" class="text-slate-400 text-xs">or click to browse</p>
       </div>
 
       <!-- Error message -->
@@ -121,9 +133,10 @@ async function processFiles(files) {
         {{ errorMessage }}
       </div>
 
-      <label class="btn-primary">
-        <span>Select Files</span>
-        <input type="file" accept=".pdf" multiple class="hidden" @change="handleFileSelect" />
+      <label :class="{ 'btn-primary': !props.disabled, 'btn-disabled': props.disabled }">
+        <span>{{ props.disabled ? 'Disabled' : 'Select Files' }}</span>
+        <input type="file" accept=".pdf" multiple :disabled="props.disabled" class="hidden"
+          @change="handleFileSelect" />
       </label>
     </div>
   </div>
@@ -141,6 +154,10 @@ async function processFiles(files) {
   @apply border-indigo-500 bg-indigo-500/10;
 }
 
+.drop-zone.disabled {
+  @apply border-slate-500/30 bg-slate-800/30 cursor-not-allowed opacity-50;
+}
+
 .upload-icon-container {
   @apply w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center;
 }
@@ -152,5 +169,10 @@ async function processFiles(files) {
 .btn-primary {
   @apply px-4 py-1.5 rounded-lg font-semibold text-white cursor-pointer text-sm;
   @apply bg-indigo-600 hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-indigo-500/20;
+}
+
+.btn-disabled {
+  @apply px-4 py-1.5 rounded-lg font-semibold text-slate-400 cursor-not-allowed text-sm;
+  @apply bg-slate-700;
 }
 </style>

@@ -1,6 +1,6 @@
 # TextHunter — Copilot Instructions
 
-Purpose: help an AI coding agent be immediately productive in this mono-repo (Vue frontend (TypeScript+ Tailwind CSS) + FastAPI backend).
+Purpose: help an AI coding agent be immediately productive in this mono-repo (Vue frontend (TypeScript+ Tailwind CSS V4) + FastAPI backend).
 
 - **Architecture (high-level)**
   - Frontend: Vue 3 + Vite + TypeScript in `frontend/`. UI stores PDFs and extracted text in IndexedDB via `frontend/src/services/db.ts` and talks to the backend via `frontend/src/services/api.ts`.

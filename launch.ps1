@@ -16,7 +16,7 @@ Set-Location $ScriptDir
 
 # Start Backend
 Write-Host "Starting Backend (FastAPI)..." -ForegroundColor Cyan
-$backendArgs = "-NoExit", "-Command", "cd '$ScriptDir\backend'; uv run uvicorn texthunter.main:app --reload --host 127.0.0.1 --port $BackendPort"
+$backendArgs = "-NoExit", "-Command", "cd '$ScriptDir\backend'; uv run python -m texthunter"
 Start-Process powershell -ArgumentList $backendArgs
 
 # Wait for backend

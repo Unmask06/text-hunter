@@ -86,6 +86,16 @@ function useSuggestedPattern() {
   keywordRegex.value = suggestedPattern.value;
   mode.value = 'manual';
 }
+
+function addExample() {
+  examples.value.push('');
+}
+
+function removeExample(index) {
+  if (examples.value.length > 2) {
+    examples.value.splice(index, 1);
+  }
+}
 </script>
 
 <template>
@@ -134,12 +144,17 @@ function useSuggestedPattern() {
           Example Strings
         </label>
         <p class="helper-text mb-3">
-          Enter 2-3 examples of the text you want to match
+          Enter at least 2 examples of the text you want to match (add more for better results)
         </p>
 
         <div class="space-y-2">
-          <input v-for="(_, index) in examples" :key="index" v-model="examples[index]" type="text" class="input-field"
-            :placeholder="`Example ${index + 1}: e.g., 10&quot;-FG-001`" :disabled="disabled || isGenerating" />
+          <div v-for="(example, index) in examples" :key="index" class="flex gap-2">
+            <input v-model="examples[index]" type="text" class="input-field flex-1"
+              :placeholder="`Example ${index + 1}: e.g., 10&quot;-FG-001`" :disabled="disabled || isGenerating" />
+            <button v-if="examples.length > 2" @click="removeExample(index)" class="remove-btn"
+              :disabled="disabled || isGenerating">×</button>
+          </div>
+          <button @click="addExample" class="add-btn" :disabled="disabled || isGenerating">+</button>
         </div>
       </div>
 
@@ -255,6 +270,14 @@ function useSuggestedPattern() {
   @apply px-6 py-3 rounded-lg font-semibold text-white;
   @apply bg-linear-to-br from-cyan-500 to-cyan-600 border border-white/10 shadow-lg;
   @apply transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-cyan-500/20 disabled:opacity-50;
+}
+
+.remove-btn {
+  @apply px-2 py-1 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded border border-red-500/20 transition-colors disabled:opacity-50;
+}
+
+.add-btn {
+  @apply px-3 py-1 text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 rounded border border-cyan-500/20 transition-colors disabled:opacity-50;
 }
 
 .suggested-card {

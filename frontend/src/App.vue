@@ -9,19 +9,19 @@ import FileUpload from "./components/FileUpload.vue";
 import RegexConfig from "./components/RegexConfig.vue";
 import ResultsTable from "./components/ResultsTable.vue";
 import {
-    checkHealth,
-    exportExcel,
-    extractAllMatches,
-    extractMatches,
+  checkHealth,
+  exportExcel,
+  extractAllMatches,
+  extractMatches,
 } from "./services/api.js";
 import {
-    deletePdf,
-    FileStatus,
-    getAllExtractedText,
-    getAllPdfs,
-    getPdfById,
-    storeExtractedText,
-    updatePdfStatus,
+  deletePdf,
+  FileStatus,
+  getAllExtractedText,
+  getAllPdfs,
+  getPdfById,
+  storeExtractedText,
+  updatePdfStatus,
 } from "./services/db.js";
 
 // State
@@ -194,146 +194,131 @@ async function handleExport() {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col">
+  <div class="app-layout">
     <!-- Header -->
-    <header class="glass-card m-4 mb-0 p-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <!-- Logo -->
-        <div
-          class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-500 to-primary-600 flex items-center justify-center"
-        >
-          <svg
-            class="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+    <header class="main-header">
+      <div class="container mx-auto flex items-center justify-between px-6">
+        <div class="flex items-center gap-4">
+          <div class="logo-container">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="app-title">TextHunter</h1>
+            <div class="status-indicator">
+              <div :class="['status-dot', backendStatus === 'online' ? 'status-online' : 'status-offline']"></div>
+              <span class="text-[10px] font-bold uppercase tracking-widest">
+                {{ backendStatus === 'online' ? 'API Online' : 'API Offline' }}
+              </span>
+            </div>
+          </div>
         </div>
-        <div>
-          <h1 class="text-xl font-bold text-primary-100">TextHunter</h1>
-          <p class="text-sm text-primary-400">
-            Hunt and extract text patterns from PDFs - v0.3
-          </p>
-        </div>
-      </div>
 
-      <!-- Backend Status -->
-      <div class="flex items-center gap-2">
-        <span
-          :class="[
-            'w-2 h-2 rounded-full',
-            backendStatus === 'online'
-              ? 'bg-success-500'
-              : backendStatus === 'offline'
-                ? 'bg-error-500'
-                : 'bg-warning-500 animate-pulse',
-          ]"
-        ></span>
-        <span class="text-sm text-primary-400">
-          {{
-            backendStatus === "online"
-              ? "Backend Online"
-              : backendStatus === "offline"
-                ? "Backend Offline"
-                : "Checking..."
-          }}
-        </span>
+        <div class="flex items-center gap-4">
+          <button v-if="allMatches.length > 0" class="btn-export" :disabled="isExporting" @click="handleExport">
+            <span class="flex items-center gap-2">
+              <svg v-if="isExporting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+              </svg>
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              {{ isExporting ? 'Exporting...' : 'Export to Excel' }}
+            </span>
+          </button>
+        </div>
       </div>
     </header>
 
     <!-- Main Content -->
-    <div class="flex-1 flex gap-4 p-4">
-      <!-- Left Sidebar -->
-      <aside class="w-80 shrink-0 flex flex-col gap-4">
-        <FileUpload @file-added="handleFileAdded" />
-        <div class="glass-card p-4 flex-1 overflow-y-auto">
-          <FileList
-            :files="files"
-            :is-loading="isLoadingFiles"
-            @delete-file="handleDeleteFile"
-          />
-        </div>
+    <main class="container mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 px-6 py-8">
+      <!-- Left Column: Controls -->
+      <aside class="lg:col-span-3 space-y-6">
+        <section>
+          <FileUpload :disabled="backendStatus === 'offline'" @file-added="handleFileAdded" />
+        </section>
+
+        <section>
+          <FileList :files="files" :is-loading="isLoadingFiles" @delete-file="handleDeleteFile" />
+        </section>
       </aside>
 
-      <!-- Main Workspace -->
-      <main class="flex-1 flex flex-col gap-4">
-        <!-- Config Panel -->
-        <RegexConfig
-          :disabled="
-            !hasReadyFiles || isExtracting || backendStatus !== 'online'
-          "
-          @extract="handleExtract"
-          @update:config="(config) => (currentConfig = config)"
-        />
+      <!-- Right Column: Results -->
+      <section class="lg:col-span-8 space-y-8">
+        <section>
+          <RegexConfig :disabled="!hasReadyFiles" @extract="handleExtract" />
+        </section>
+        <ResultsTable :matches="matches" :total-count="totalCount" :is-loading="isExtracting" />
+      </section>
+    </main>
 
-        <!-- Results Table -->
-        <div class="flex-1">
-          <ResultsTable
-            :matches="matches"
-            :total-count="totalCount"
-            :is-loading="isExtracting"
-          />
+    <!-- Footer -->
+    <footer class="main-footer">
+      <div class="container mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex flex-col gap-2">
+          <p class="copyright">
+            &copy; {{ new Date().getFullYear() }} TextHunter. All rights reserved.
+          </p>
+          <p class="text-xs text-slate-600">Built for high-performance PDF data extraction</p>
         </div>
-      </main>
-    </div>
-
-    <!-- Footer / Export Bar -->
-    <footer class="glass-card m-4 mt-0 p-4 flex items-center justify-between">
-      <div class="text-sm text-primary-400">
-        <span v-if="allMatches.length > 0">
-          {{ allMatches.length }} matches ready for export
-        </span>
-        <span v-else> Configure regex and extract to see results </span>
       </div>
-
-      <button
-        class="btn-accent flex items-center gap-2"
-        :disabled="!canExport"
-        @click="handleExport"
-      >
-        <svg
-          v-if="isExporting"
-          class="w-5 h-5 animate-spin"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          ></circle>
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        <svg
-          v-else
-          class="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        {{ isExporting ? "Exporting..." : "Export to Excel" }}
-      </button>
     </footer>
   </div>
 </template>
+
+<style scoped>
+@reference "@/style.css";
+
+.app-layout {
+  @apply min-h-screen flex flex-col bg-slate-950 text-slate-400 font-sans selection:bg-indigo-500/30;
+}
+
+.main-header {
+  @apply py-4 border-b border-white/5 bg-slate-900/40 backdrop-blur-md sticky top-0 z-50;
+}
+
+.logo-container {
+  @apply w-12 h-12 rounded-2xl bg-linear-to-br from-indigo-500 to-cyan-500 shadow-lg shadow-indigo-500/20 flex items-center justify-center;
+}
+
+.app-title {
+  @apply text-2xl font-black text-white tracking-tight leading-none;
+}
+
+.status-indicator {
+  @apply flex items-center gap-2 mt-1;
+}
+
+.status-dot {
+  @apply w-2 h-2 rounded-full;
+}
+
+.status-online {
+  @apply bg-emerald-500;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.status-offline {
+  @apply bg-red-500;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.btn-export {
+  @apply px-5 py-2.5 rounded-xl bg-slate-800 text-white font-semibold text-sm transition-all;
+  @apply hover:bg-slate-700 active:transform active:scale-95 disabled:opacity-50 border border-white/5;
+}
+
+.main-footer {
+  @apply mt-auto border-t border-white/5 bg-slate-900/20 backdrop-blur-sm;
+}
+
+.copyright {
+  @apply text-sm font-semibold text-slate-500;
+}
+</style>

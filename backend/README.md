@@ -5,9 +5,10 @@ FastAPI backend service for PDF text pattern extraction using regex.
 ## Features
 
 - 🔍 **Regex-based text extraction** from PDF content
-- 🤖 **Smart regex generation** from example strings
-- 📊 **Excel export** with extraction results
+- 🤖 **Smart regex generation** from example strings using grex
+- 📊 **Excel export** with extraction results and context
 - 🏥 **Health check** endpoint for monitoring
+- 📋 **Pydantic models** for type-safe API responses
 
 ## Requirements
 
@@ -28,14 +29,14 @@ The API will be available at `http://localhost:8000`.
 
 ## API Endpoints
 
-| Method | Endpoint        | Description                              |
-| ------ | --------------- | ---------------------------------------- |
-| GET    | `/`             | API info and version                     |
-| GET    | `/api/health`   | Health check                             |
-| POST   | `/api/extract`  | Extract matches (preview, max 10)        |
-| POST   | `/api/extract-all` | Extract all matches                   |
-| POST   | `/api/guess-regex` | Generate regex from examples          |
-| POST   | `/api/export`   | Export matches to Excel                  |
+| Method | Endpoint       | Description                       |
+| ------ | -------------- | --------------------------------- |
+| GET    | `/`            | API info and version              |
+| GET    | `/health`      | Health check                      |
+| POST   | `/extract`     | Extract matches (preview, max 10) |
+| POST   | `/extract-all` | Extract all matches for export    |
+| POST   | `/guess-regex` | Generate regex from examples      |
+| POST   | `/export`      | Export matches to Excel           |
 
 ## Development
 
@@ -46,8 +47,18 @@ uv sync --group dev
 # Run tests
 uv run pytest
 
-# Run with auto-reload
+# Run with auto-reload (default when using python -m)
 uv run python -m texthunter
+```
+
+## Testing
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=texthunter
 ```
 
 ## Project Structure
@@ -56,22 +67,31 @@ uv run python -m texthunter
 backend/
 ├── texthunter/
 │   ├── __init__.py
-│   ├── __main__.py       # Entry point
-│   ├── main.py           # FastAPI app configuration
-│   ├── routes.py         # API endpoints
-│   ├── models.py         # Pydantic models
-│   ├── regex_engine.py   # Regex extraction logic
-│   └── excel_generator.py # Excel export
+│   ├── __main__.py       # Module entry point
+│   ├── main.py           # FastAPI app & CORS config
+│   ├── routes.py         # API endpoints with error handling
+│   ├── models.py         # Pydantic request/response models
+│   ├── regex_engine.py   # Core regex extraction logic
+│   └── excel_generator.py # Excel export with formatting
 ├── tests/
-├── pyproject.toml
+│   └── test_regex_engine.py # Unit tests
+├── pyproject.toml        # Dependencies & project config
+├── uv.lock              # Lock file
 └── README.md
 ```
 
+## Key Components
+
+- **regex_engine.py**: Core logic for pattern matching and regex generation
+- **excel_generator.py**: Pandas-based Excel export with styling
+- **routes.py**: FastAPI routes with proper error handling
+- **models.py**: Type-safe API models using Pydantic
+
 ## Environment Variables
 
-| Variable            | Default | Description                                    |
-| ------------------- | ------- | ---------------------------------------------- |
-| `TEXTHUNTER_MOUNTED`| `false` | Set to `true` in production to disable `/api` prefix |
+| Variable             | Default | Description                                          |
+| -------------------- | ------- | ---------------------------------------------------- |
+| `TEXTHUNTER_MOUNTED` | `false` | Set to `true` in production to disable `/api` prefix |
 
 ## License
 

@@ -128,14 +128,7 @@ def guess_regex(examples: list[str]) -> tuple[str, str]:
             raise ValueError(f"Generated regex is invalid: {e}") from e
 
         # Check if pattern matches all examples
-        test_results = {}
-        all_match = True
-        for ex in examples:
-            match = compiled.fullmatch(ex)
-            test_results[ex] = bool(match)
-            if not match:
-                all_match = False
-
+        all_match = all(compiled.fullmatch(ex) for ex in examples)
         if not all_match:
             raise ValueError(
                 "Generated regex does not match all examples."
@@ -146,7 +139,7 @@ def guess_regex(examples: list[str]) -> tuple[str, str]:
         logger.info("Generated pattern: %s", pattern)
         return pattern, explanation
 
-    except Exception as e:
+    except Exception as e:  # TODO: specify exception
         logger.error("Failed to generate regex: %s", e)
         raise ValueError(
             f"Failed to generate regex from examples: {e}. Please add regex manually."

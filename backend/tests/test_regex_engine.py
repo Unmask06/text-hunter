@@ -1,5 +1,7 @@
 """Tests for the regex engine module."""
 
+import re
+
 import pytest
 
 from texthunter.regex_engine import extract_matches, guess_regex
@@ -76,10 +78,8 @@ class TestGuessRegex:
         examples = ['10"-FG-001', '2"-CWS-505']
         pattern, explanation = guess_regex(examples)
 
-        assert "grex" in explanation.lower()
+        assert "regex" in explanation.lower()
         # Pattern should be valid regex
-        import re
-
         compiled = re.compile(pattern)
         for ex in examples:
             assert compiled.fullmatch(ex), f"Pattern {pattern} did not match {ex}"
@@ -89,10 +89,8 @@ class TestGuessRegex:
         examples = ["ABC-001", "DEF-002", "GHI-003"]
         pattern, explanation = guess_regex(examples)
 
-        assert "grex" in explanation.lower()
+        assert "regex" in explanation.lower()
         # Pattern should be valid regex
-        import re
-
         compiled = re.compile(pattern)
         for ex in examples:
             assert compiled.fullmatch(ex), f"Pattern {pattern} did not match {ex}"
@@ -104,8 +102,6 @@ class TestGuessRegex:
 
     def test_generated_pattern_matches_examples(self):
         """Test that generated pattern matches the input examples."""
-        import re
-
         examples = ["TAG-001-A", "TAG-002-B", "TAG-003-C"]
         pattern, _ = guess_regex(examples)
 

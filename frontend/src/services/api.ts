@@ -1,7 +1,10 @@
 /**
  * API service layer for communicating with the FastAPI backend.
  */
+import type { components } from "@/types/api.ts";
 import axios from "axios";
+
+type Schemas = components["schemas"];
 
 // Base URL: localhost for dev, api.xergiz.com for production
 const API_BASE_URL = import.meta.env.DEV
@@ -19,45 +22,50 @@ console.log(API_BASE_URL);
 
 /**
  * Extract matches from text content using regex patterns.
- * @param {Object} payload
- * @param {string[]} payload.filenames - List of PDF filenames
- * @param {string} payload.keyword_regex - Regex pattern to match
- * @param {string|null} payload.file_identifier_regex - Optional regex for filename metadata
- * @param {Object} payload.text_content - Map of filename -> {page: text}
- * @returns {Promise<{matches: Array, total_count: number, preview_count: number}>}
+ * @param payload - The extraction request payload
+ * @param payload.filenames - List of PDF filenames
+ * @param payload.keyword_regex - Regex pattern to match
+ * @param payload.file_identifier_regex - Optional regex for filename metadata
+ * @param payload.text_content - Map of filename -> {page: text}
  */
-export async function extractMatches(payload) {
+export async function extractMatches(
+  payload: Schemas["ExtractionRequest"],
+): Promise<Schemas["ExtractionResponse"]> {
   const response = await api.post("/extract", payload);
   return response.data;
 }
 
 /**
  * Extract all matches (not just preview).
- * @param {Object} payload - Same as extractMatches
- * @returns {Promise<{matches: Array, total_count: number}>}
+ * @param payload - Same as extractMatches
  */
-export async function extractAllMatches(payload) {
+export async function extractAllMatches(
+  payload: Schemas["ExtractionRequest"],
+): Promise<Schemas["ExtractionResponse"]> {
   const response = await api.post("/extract-all", payload);
   return response.data;
 }
 
 /**
  * Generate a regex pattern from example strings.
- * @param {string[]} examples - At least 2 example strings
- * @returns {Promise<{pattern: string, explanation: string, test_results: Object}>}
+ * @param examples - At least 2 example strings
  */
-export async function guessRegex(examples) {
+export async function guessRegex(
+  examples: Schemas["RegexGuessRequest"]["examples"],
+): Promise<Schemas["RegexGuessResponse"]> {
   const response = await api.post("/guess-regex", { examples });
   return response.data;
 }
 
 /**
  * Export matches to Excel file.
- * @param {Array} matches - List of match results
- * @param {boolean} includeContext - Whether to include context column
- * @returns {Promise<Blob>} Excel file blob
+ * @param matches - List of match results
+ * @param includeContext - Whether to include context column
  */
-export async function exportExcel(matches, includeContext = true) {
+export async function exportExcel(
+  matches: Schemas["MatchResult"][],
+  includeContext = true,
+): Promise<Blob> {
   const response = await api.post(
     "/export",
     { matches, include_context: includeContext },
@@ -89,9 +97,11 @@ export async function exportExcel(matches, includeContext = true) {
 
 /**
  * Check backend health status.
- * @returns {Promise<{status: string, timestamp: string}>}
  */
-export async function checkHealth() {
+export async function checkHealth(): Promise<{
+  status: string;
+  timestamp: string;
+}> {
   const response = await api.get("/health");
   return response.data;
 }

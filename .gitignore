@@ -1,1 +1,8 @@
 *cache*
+
+# Documentation build
+dist/
+products/text-hunter/docs/.vitepress/cache
+products/text-hunter/docs/.vitepress/dist
+products/text-hunter/docs/node_modules/
+products/text-hunter/docs/package-lock.json

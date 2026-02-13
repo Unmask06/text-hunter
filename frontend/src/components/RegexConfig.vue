@@ -15,7 +15,7 @@ const props = defineProps({
 const emit = defineEmits(['extract', 'update:config']);
 
 // Mode toggle
-const mode = ref('manual'); // 'manual' or 'helper'
+const mode = ref('helper'); // 'helper' (AI) or 'manual'
 
 // Manual mode inputs
 const keywordRegex = ref('');
@@ -104,41 +104,16 @@ function removeExample(index) {
 
     <!-- Mode Toggle -->
     <div class="toggle-group">
-      <button :class="['toggle-btn', { active: mode === 'manual' }]" @click="mode = 'manual'">
-        Manual Regex
-      </button>
       <button :class="['toggle-btn', { active: mode === 'helper' }]" @click="mode = 'helper'">
-        Regex Helper
+        AI Pattern Generator
+      </button>
+      <button :class="['toggle-btn', { active: mode === 'manual' }]" @click="mode = 'manual'">
+        Advanced Manual Regex
       </button>
     </div>
 
-    <!-- Manual Mode -->
-    <div v-if="mode === 'manual'" class="space-y-4 animate-fade-in">
-      <div>
-        <label class="input-label">
-          Keyword Regex <span class="text-accent-500">*</span>
-        </label>
-        <input v-model="keywordRegex" type="text" class="input-field" placeholder='e.g., \d+"-[A-Z]+-\d+'
-          :disabled="disabled" />
-        <p class="helper-text">
-          Pattern to find in PDF text content
-        </p>
-      </div>
-
-      <div>
-        <label class="input-label">
-          File Identifier Regex <span class="text-primary-500">(optional)</span>
-        </label>
-        <input v-model="fileIdentifierRegex" type="text" class="input-field" placeholder='e.g., ^(\d{4})_([^_]+)'
-          :disabled="disabled" />
-        <p class="helper-text">
-          Extract metadata from filenames (groups become columns)
-        </p>
-      </div>
-    </div>
-
-    <!-- Helper Mode -->
-    <div v-else class="space-y-4 animate-fade-in">
+    <!-- Helper Mode (AI Pattern Generator) -->
+    <div v-if="mode === 'helper'" class="space-y-4 animate-fade-in">
       <div>
         <label class="input-label">
           Example Strings
@@ -211,6 +186,31 @@ function removeExample(index) {
         </label>
         <input v-model="fileIdentifierRegex" type="text" class="input-field" placeholder='e.g., ^(\d{4})_([^_]+)'
           :disabled="disabled" />
+      </div>
+    </div>
+
+    <!-- Manual Mode (Advanced) -->
+    <div v-else class="space-y-4 animate-fade-in">
+      <div>
+        <label class="input-label">
+          Keyword Regex <span class="text-accent-500">*</span>
+        </label>
+        <input v-model="keywordRegex" type="text" class="input-field" placeholder='e.g., \d+"-[A-Z]+-\d+'
+          :disabled="disabled" />
+        <p class="helper-text">
+          Pattern to find in PDF text content
+        </p>
+      </div>
+
+      <div>
+        <label class="input-label">
+          File Identifier Regex <span class="text-primary-500">(optional)</span>
+        </label>
+        <input v-model="fileIdentifierRegex" type="text" class="input-field" placeholder='e.g., ^(\d{4})_([^_]+)'
+          :disabled="disabled" />
+        <p class="helper-text">
+          Extract metadata from filenames (groups become columns)
+        </p>
       </div>
     </div>
 

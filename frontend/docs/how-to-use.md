@@ -17,28 +17,12 @@ The application extracts text from each page of your PDF and stores it locally i
 
 TextHunter offers two ways to define the pattern you're looking for:
 
-### Option A: Manual Regex Pattern
+### Option 1: AI Regex Generation (Recommended)
 
-If you're familiar with regular expressions, you can enter your pattern directly:
-
-**Example patterns:**
-```regex
-# Line numbers (e.g., 12-AB-1234-A1B)
-\d{2}-[A-Z]{2}-\d{4}-[A-Z]\d[A-Z]
-
-# Instrument tags (e.g., FT-101, PCV-2345)
-[A-Z]{2,3}-\d{3,4}[A-Z]?
-
-# Equipment tags (e.g., P-101A, V-2301)
-[A-Z]-\d{3,4}[A-Z]?
-```
-
-### Option B: AI Regex Generation
-
-If you're not comfortable with regex, let the AI generate it for you:
+If you're not comfortable with regex or want to save time:
 
 1. Click the **AI Regex Generator** button
-2. Provide at least 2 example strings that match your desired pattern
+2. Provide at least 2 example strings that match your desired pattern (e.g., actual line numbers or instrument tags from your PDF)
 3. Click **Generate Pattern**
 4. Review and use the generated regex pattern
 
@@ -50,6 +34,22 @@ Input examples:
 - LT-401A
 
 Generated pattern: [A-Z]{2,3}-\d{3,4}[A-Z]?
+```
+
+### Option 2: Manual Regex Pattern
+
+For advanced users who prefer to enter patterns directly:
+
+**Example patterns:**
+```regex
+# Line numbers (e.g., 12-AB-1234-A1B)
+\d{2}-[A-Z]{2}-\d{4}-[A-Z]\d[A-Z]
+
+# Instrument tags (e.g., FT-101, PCV-2345)
+[A-Z]{2,3}-\d{3,4}[A-Z]?
+
+# Equipment tags (e.g., P-101A, V-2301)
+[A-Z]-\d{3,4}[A-Z]?
 ```
 
 ### Optional: File Identifier Pattern
@@ -100,54 +100,11 @@ For scanned PDFs, built-in OCR support is planned for a future release. Currentl
 
 ### 🔄 Workflow Integration
 
-**Drawing Reviews**: Extract all instruments from P&IDs to verify against instrument index
+TextHunter is designed to integrate seamlessly with your engineering workflows. See the [Use Cases](/use-cases#integration-with-workflows) section for ideas on how to use extracted data for QA, Procurement, Construction, and Commissioning.
 
-**Line List Generation**: Pull all line numbers from isometric drawings
+## Common Patterns
 
-**Equipment Tracking**: Create equipment lists from general arrangement drawings
-
-**Data Validation**: Cross-check extracted data against existing databases
-
-## Common Patterns for Oil & Gas
-
-### Line Numbers
-```regex
-# Format: XX-XXX-XXXX-XXX
-\d{2}-[A-Z]{2,3}-\d{4}-[A-Z]\d[A-Z]?
-
-# Variations:
-# 12-AB-1234-A1B
-# 24-PW-5678-C2D
-```
-
-### Instrument Tags
-```regex
-# Format: XX-XXX or XXX-XXX
-[A-Z]{2,3}-\d{3,4}[A-Z]?
-
-# Examples:
-# FT-101, PT-2345, LT-401A
-# TCV-5678B, PDT-9012
-```
-
-### Equipment Tags
-```regex
-# Format: X-XXX[X]
-[A-Z]{1,2}-\d{3,4}[A-Z]?
-
-# Examples:
-# P-101A, V-2301, E-4501B
-# C-789, T-1234
-```
-
-### Valve Tags
-```regex
-# Format: XXX-XXXX
-[A-Z]{2,3}-\d{4}
-
-# Examples:
-# HV-1234, CV-5678, BDV-9012
-```
+For detailed examples of common patterns used in the Oil & Gas industry (Line Numbers, Instruments, Equipment, etc.), please refer to our [Use Cases](/use-cases) guide.
 
 ## Troubleshooting
 

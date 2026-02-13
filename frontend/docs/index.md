@@ -11,7 +11,7 @@ hero:
       link: /overview
     - theme: alt
       text: Launch App
-      link: ../../
+      link: ../
 
 features:
   - icon: 📄

@@ -337,26 +337,6 @@ Extract valve and fitting counts:
 
 ---
 
-## Industry-Specific Tips
-
-### Offshore Platforms
-- Equipment often includes deck/module location (e.g., "A-P-101" for Module A)
-- Include location prefix in your pattern
-
-### Refineries
-- Complex line numbering with unit numbers (e.g., "U100-12-AB-1234")
-- Pattern must account for unit prefix
-
-### Pipeline Projects
-- Line numbers include KP (kilometer post) references
-- May need to extract both line tag and location
-
-### LNG Facilities
-- Cryogenic lines have special designation
-- Equipment includes complex heat exchanger bundles
-
----
-
 ## Summary
 
 TextHunter streamlines data extraction from technical drawings, saving hours of manual work while reducing errors. Whether you're generating line lists, instrument lists, or equipment lists, the pattern-based approach adapts to your specific naming conventions and document formats.

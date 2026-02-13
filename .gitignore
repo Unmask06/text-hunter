@@ -1,1 +1,6 @@
 *cache*
+
+# Documentation build
+dist/
+frontend/docs/.vitepress/cache
+frontend/docs/.vitepress/dist

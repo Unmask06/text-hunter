@@ -11,7 +11,7 @@ export default defineConfig({
       { text: 'Overview', link: '/overview' },
       { text: 'How to Use', link: '/how-to-use' },
       { text: 'Use Cases', link: '/use-cases' },
-      { text: 'Launch App', link: '/products/text-hunter/', target: '_blank', rel: 'noopener' }
+      { text: 'Launch App', link: '../../', target: '_blank', rel: 'noopener' }
     ],
 
     sidebar: [

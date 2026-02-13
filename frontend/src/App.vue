@@ -217,7 +217,7 @@ async function handleExport() {
         </div>
 
         <div class="flex items-center gap-4">
-          <a href="/text-hunter/docs/" target="_blank" class="btn-docs" title="Open Documentation">
+          <a href="/products/text-hunter/docs/" target="_blank" class="btn-docs" title="Open Documentation">
             <span class="flex items-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

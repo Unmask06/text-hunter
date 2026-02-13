@@ -83,22 +83,15 @@ npm run dev
 
 **Development:**
 ```bash
-cd products/text-hunter/docs
-npm install
-npm run dev
+cd frontend
+npm run docs:dev
 ```
-Visit `http://localhost:5174` (or check console for actual port)
+Visit `http://localhost:5173/products/text-hunter/docs/` (or check console for actual port)
 
 **Production Build:**
 ```bash
-cd products/text-hunter/docs
-npm run build
-```
-
-Or from the frontend directory:
-```bash
-npm run docs:dev    # Start docs dev server
-npm run docs:build  # Build docs
+cd frontend
+npm run docs:build
 ```
 
 **From the Application:**

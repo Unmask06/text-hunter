@@ -3,14 +3,15 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'TextHunter',
   description: 'Hunt and extract text patterns from PDF documents',
-  outDir: '../../../dist/products/text-hunter/docs',
+  base: '/products/text-hunter/docs/',
+  outDir: '../../dist/products/text-hunter/docs',
   
   themeConfig: {
     nav: [
       { text: 'Overview', link: '/overview' },
       { text: 'How to Use', link: '/how-to-use' },
       { text: 'Use Cases', link: '/use-cases' },
-      { text: 'Launch App', link: 'http://localhost:5173', target: '_blank', rel: 'noopener' }
+      { text: 'Launch App', link: '/products/text-hunter/', target: '_blank', rel: 'noopener' }
     ],
 
     sidebar: [

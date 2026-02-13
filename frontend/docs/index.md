@@ -11,7 +11,7 @@ hero:
       link: /overview
     - theme: alt
       text: Launch App
-      link: http://localhost:5173
+      link: /products/text-hunter/
 
 features:
   - icon: 📄

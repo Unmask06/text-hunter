@@ -72,6 +72,38 @@ npm run dev
 4. Configure your regex pattern or use the AI regex generator
 5. Extract matches and export results to Excel
 
+## Documentation
+
+📚 **Comprehensive documentation is available** for TextHunter, including:
+- Overview and target users
+- How-to guides with examples
+- Oil & Gas industry use cases (line lists, instrument lists, equipment lists)
+
+### Access Documentation
+
+**Development:**
+```bash
+cd products/text-hunter/docs
+npm install
+npm run dev
+```
+Visit `http://localhost:5174` (or check console for actual port)
+
+**Production Build:**
+```bash
+cd products/text-hunter/docs
+npm run build
+```
+
+Or from the frontend directory:
+```bash
+npm run docs:dev    # Start docs dev server
+npm run docs:build  # Build docs
+```
+
+**From the Application:**
+Click the "Docs" button in the top-right corner of the TextHunter application.
+
 ## API Documentation
 
 The backend provides a REST API with the following endpoints:

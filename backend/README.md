@@ -12,7 +12,7 @@ FastAPI backend service for PDF text pattern extraction using regex.
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.12+
 - [uv](https://docs.astral.sh/uv/) (recommended package manager)
 
 ## Quick Start
@@ -69,10 +69,15 @@ backend/
 │   ├── __init__.py
 │   ├── __main__.py       # Module entry point
 │   ├── main.py           # FastAPI app & CORS config
-│   ├── routes.py         # API endpoints with error handling
-│   ├── models.py         # Pydantic request/response models
-│   ├── regex_engine.py   # Core regex extraction logic
-│   └── excel_generator.py # Excel export with formatting
+│   ├── api/              # API router + schemas
+│   │   ├── routes.py     # API endpoints with error handling
+│   │   └── schemas.py    # Pydantic request/response models
+│   ├── core/             # Business logic
+│   │   ├── regex.py      # Regex extraction and generation
+│   │   └── excel.py      # Excel export with formatting
+│   ├── config/           # Runtime settings
+│   │   └── settings.py   # CORS and runtime constants
+│   └── utils/            # Shared utilities
 ├── tests/
 │   └── test_regex_engine.py # Unit tests
 ├── pyproject.toml        # Dependencies & project config
@@ -82,10 +87,10 @@ backend/
 
 ## Key Components
 
-- **regex_engine.py**: Core logic for pattern matching and regex generation
-- **excel_generator.py**: Pandas-based Excel export with styling
-- **routes.py**: FastAPI routes with proper error handling
-- **models.py**: Type-safe API models using Pydantic
+- **api/routes.py**: FastAPI routes with proper error handling
+- **api/schemas.py**: Type-safe API models using Pydantic
+- **core/regex.py**: Core logic for pattern matching and regex generation
+- **core/excel.py**: Pandas-based Excel export with styling
 
 ## Environment Variables
 

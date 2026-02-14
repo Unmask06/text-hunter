@@ -58,3 +58,4 @@ class ExportRequest(BaseModel):
 
     matches: list[MatchResult]
     include_context: bool = Field(default=True)
+

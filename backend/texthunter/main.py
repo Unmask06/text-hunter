@@ -8,7 +8,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from texthunter.routes import router
+from texthunter.api.routes import router
+from texthunter.config.settings import CORS_ORIGINS
 
 # Configure logging
 logging.basicConfig(
@@ -33,18 +34,9 @@ app = FastAPI(
     version=version("texthunter"),
 )
 
-# Allow CORS for Vue frontend (assuming runs on port 5173 by default)
-origins: list[str] = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "https://xergiz.com",
-    "https://www.xergiz.com",
-    "https://api.xergiz.com",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -67,9 +59,9 @@ async def root() -> dict[str, str]:
     }
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8000) -> None:
+def run_server() -> None:
     """Run the TextHunter API server."""
-    uvicorn.run("texthunter.main:app", host=host, port=port, reload=True)
+    uvicorn.run("texthunter.main:app", host="0.0.0.0", port=8000, reload=True)
 
 
 if __name__ == "__main__":

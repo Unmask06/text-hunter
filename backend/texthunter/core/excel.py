@@ -5,7 +5,7 @@ from io import BytesIO
 import pandas as pd
 from openpyxl.styles import Alignment, Font, PatternFill
 
-from texthunter.models import MatchResult
+from texthunter.api.schemas import MatchResult
 
 
 def build_dataframe(
@@ -19,6 +19,7 @@ def build_dataframe(
 
     Returns:
         Pandas DataFrame with match data
+
     """
     data = []
     for match in matches:
@@ -45,6 +46,7 @@ def generate_excel(matches: list[MatchResult], include_context: bool = True) -> 
 
     Returns:
         BytesIO buffer containing the Excel file
+
     """
     df = build_dataframe(matches, include_context)
 
@@ -54,7 +56,6 @@ def generate_excel(matches: list[MatchResult], include_context: bool = True) -> 
         df.to_excel(writer, index=False, sheet_name="Extraction Results")
 
         # Get the workbook and worksheet for styling
-        workbook = writer.book
         worksheet = writer.sheets["Extraction Results"]
 
         # Style the header row
@@ -89,3 +90,4 @@ def generate_excel(matches: list[MatchResult], include_context: bool = True) -> 
 
     buffer.seek(0)
     return buffer
+

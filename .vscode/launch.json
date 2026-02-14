@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI Backend",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["texthunter.main:app", "--reload"],
+      "cwd": "${workspaceFolder}/backend"
+    },
+    {
+      "name": "Vue Frontend (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173/products/text-hunter/",
+      "webRoot": "${workspaceFolder}/frontend/src"
+    }
+  ]
+}
+

@@ -7,15 +7,15 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from texthunter.excel_generator import generate_excel
-from texthunter.models import (
+from texthunter.api.schemas import (
     ExportRequest,
     ExtractionRequest,
     ExtractionResponse,
     RegexGuessRequest,
     RegexGuessResponse,
 )
-from texthunter.regex_engine import extract_matches, guess_regex
+from texthunter.core.excel import generate_excel
+from texthunter.core.regex import extract_matches, guess_regex
 
 logger = logging.getLogger(__name__)
 
@@ -145,3 +145,4 @@ async def export_excel(payload: ExportRequest):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+

@@ -6,7 +6,7 @@ from collections.abc import Iterator
 
 from grex import RegExpBuilder
 
-from texthunter.models import MatchResult
+from texthunter.api.schemas import MatchResult
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ def extract_matches(
 
     Yields:
         MatchResult objects for each match found
+
     """
     logger.debug("Compiling keyword regex: %s", keyword_regex)
     try:
@@ -106,6 +107,7 @@ def guess_regex(examples: list[str]) -> tuple[str, str]:
 
     Returns:
         Tuple of (pattern, explanation)
+
     """
     logger.debug("Generating regex from %d examples using grex", len(examples))
 
@@ -144,3 +146,4 @@ def guess_regex(examples: list[str]) -> tuple[str, str]:
         raise ValueError(
             f"Failed to generate regex from examples: {e}. Please add regex manually."
         ) from e
+

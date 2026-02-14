@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from texthunter.regex_engine import extract_matches, guess_regex
+from texthunter.core.regex import extract_matches, guess_regex
 
 
 class TestExtractMatches:

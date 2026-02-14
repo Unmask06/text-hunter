@@ -16,7 +16,7 @@ TextHunter is a full-stack web application that allows you to upload PDF files, 
 ## Architecture
 
 - **Frontend**: Vue 3 + Vite + TypeScript + Tailwind CSS
-- **Backend**: FastAPI + Python 3.11+
+- **Backend**: FastAPI + Python 3.12+
 - **Storage**: IndexedDB (frontend) + in-memory processing (backend)
 - **Deployment**: Ready for containerization and cloud deployment
 
@@ -25,7 +25,7 @@ TextHunter is a full-stack web application that allows you to upload PDF files, 
 ### Prerequisites
 
 - Node.js 18+
-- Python 3.11+
+- Python 3.12+
 - [uv](https://docs.astral.sh/uv/) (recommended Python package manager)
 
 ### Installation & Running
@@ -66,7 +66,7 @@ npm run dev
 
 ## Usage
 
-1. Open your browser to `http://localhost:5173`
+1. Open your browser to `http://localhost:5173/products/text-hunter/`
 2. Upload PDF files using the file upload area
 3. Wait for text extraction to complete
 4. Configure your regex pattern or use the AI regex generator
@@ -134,10 +134,10 @@ text-hunter/
 ├── backend/                 # FastAPI backend
 │   ├── texthunter/
 │   │   ├── main.py         # FastAPI app
-│   │   ├── routes.py       # API endpoints
-│   │   ├── models.py       # Pydantic models
-│   │   ├── regex_engine.py # Regex processing
-│   │   └── excel_generator.py # Excel export
+│   │   ├── api/            # API layer
+│   │   ├── core/           # Business logic layer
+│   │   ├── config/         # Runtime settings
+│   │   └── utils/          # Shared utilities
 │   └── tests/              # Backend tests
 ├── frontend/                # Vue.js frontend
 │   ├── src/

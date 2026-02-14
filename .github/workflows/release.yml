@@ -1,81 +1,74 @@
-name: Product Build
+name: Release
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - "frontend/**"
       - "backend/**"
       - ".github/workflows/release.yml"
-  workflow_dispatch:
-
-permissions:
-  contents: read
 
 jobs:
-  build-and-notify:
+  detect-changes:
     runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Detect changed areas
-        if: github.event_name == 'push'
-        id: changes
-        uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
           filters: |
-            frontend:
-              - 'frontend/**'
-            backend:
-              - 'backend/**'
+            frontend: frontend/**
+            backend: backend/**
 
-      - name: Setup Python
-        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.frontend == 'true'
-        uses: actions/setup-python@v4
+  build-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
-
-      - name: Install uv
-        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.frontend == 'true'
-        run: pip install uv
-
-      - name: Setup Node.js
-        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.frontend == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install and Build
-        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.frontend == 'true'
-        run: |
-          cd frontend
-          npm ci
-          npm run build
-
-      - name: Upload Artifact
-        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.frontend == 'true'
-        uses: actions/upload-artifact@v4
+          node-version: 20
+      - run: cd frontend && npm ci && npm run build
+      - uses: actions/upload-artifact@v4
         with:
           name: texthunter-dist
           path: frontend/dist/
-          retention-days: 1
 
-      - name: Trigger XergiZ frontend update
-        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.frontend == 'true'
-        uses: peter-evans/repository-dispatch@v3
+  notify-xergiz-frontend:
+    needs: [detect-changes, build-frontend]
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.XERGIZ_TRIGGER_TOKEN }}
           repository: XergiZ/xergiz
           event-type: product-updated
-          client-payload: '{"product":"texthunter","repo":"Unmask06/text-hunter","run_id":"${{ github.run_id }}","sha":"${{ github.sha }}","changed_scope":"frontend"}'
+          client-payload: |
+            {
+              "product": "text-hunter",
+              "product_id": "texthunter",
+              "run_id": "${{ github.run_id }}",
+              "repo": "${{ github.repository }}"
+            }
 
-      - name: Trigger XergiZ backend deploy
-        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.backend == 'true'
-        uses: peter-evans/repository-dispatch@v3
+  notify-xergiz-backend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.XERGIZ_TRIGGER_TOKEN }}
           repository: XergiZ/xergiz
           event-type: product-backend-updated
-          client-payload: '{"product":"texthunter","repo":"Unmask06/text-hunter","sha":"${{ github.sha }}","changed_scope":"backend"}'
+          client-payload: |
+            {
+              "product": "text-hunter",
+              "product_id": "texthunter",
+              "repo": "${{ github.repository }}"
+            }

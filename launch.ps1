@@ -7,7 +7,7 @@ Write-Host "Starting TextHunter Application..." -ForegroundColor Cyan
 $BackendPort = 8000
 $FrontendPort = 5173
 $BackendUrl = "http://localhost:$BackendPort"
-$FrontendUrl = "http://localhost:$FrontendPort"
+$FrontendUrl = "http://localhost:$FrontendPort/products/text-hunter/"
 
 # Get the script directory
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path

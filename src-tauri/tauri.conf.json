@@ -27,6 +27,7 @@
       "timestampUrl": ""
     }
   },
+  "version": "0.7.0",
   "productName": "TextHunter",
   "mainBinaryName": "TextHunter",
   "identifier": "com.xergiz.text-hunter",

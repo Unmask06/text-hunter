@@ -1,6 +1,6 @@
 [package]
 name = "text-hunter"
-version = "0.1.0"
+version = "0.7.0"
 description = "Hunt and extract text patterns from PDF documents"
 authors = ["TextHunter Team"]
 edition = "2021"

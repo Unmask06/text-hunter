@@ -1,11 +1,22 @@
 import { defineConfig } from "vitepress";
 
+// Determine build target from environment
+const isDesktop = process.env.VITE_BUILD_TARGET === 'desktop';
+const isWeb = process.env.VITE_BUILD_TARGET === 'web';
+
+// Default to desktop (Tauri) build
+const base = isWeb ? "/products/text-hunter/docs/" : "/docs/";
+const outDir = isWeb ? "../dist/products/text-hunter/docs" : "../dist/docs";
+const canonical = isWeb ? "/products/text-hunter/docs/" : "/docs/";
+
+// For dev mode, use command-line API to set base path
+// vitepress dev docs --base /products/text-hunter/docs/
 export default defineConfig({
   title: "TextHunter",
   description: "Hunt and extract text patterns from PDF documents",
-  base: "/products/text-hunter/docs/",
-  outDir: "../dist/products/text-hunter/docs",
-  head: [["link", { rel: "canonical", href: "/products/text-hunter/" }]],
+  base,
+  outDir,
+  head: [["link", { rel: "canonical", href: canonical }]],
 
   themeConfig: {
     nav: [

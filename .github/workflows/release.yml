@@ -103,6 +103,9 @@ jobs:
       - name: Install frontend dependencies
         run: cd frontend && npm ci
 
+      - name: Build frontend for desktop
+        run: cd frontend && npm run build:desktop
+
       - name: Install backend dependencies
         run: cd backend && pip install uv && uv pip install --system .
 
@@ -128,7 +131,7 @@ jobs:
           targets: x86_64-pc-windows-msvc
 
       - name: Build Tauri app
-        run: npm run tauri build
+        run: npm run build:desktop
 
       - name: Create portable ZIP
         run: |

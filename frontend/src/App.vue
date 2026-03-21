@@ -56,8 +56,8 @@ onMounted(async () => {
   // Initialize PDF worker
   initPdfWorker();
 
-  // Check backend status
-  checkBackendStatus();
+  // Note: Backend status check is deferred until after license validation
+  // to ensure the sidecar has time to start up
 });
 
 onUnmounted(() => {
@@ -98,17 +98,6 @@ function initPdfWorker() {
       await loadFiles();
     }
   };
-}
-
-async function checkBackendStatus() {
-  try {
-    const result = await checkHealth();
-    console.log("Backend health:", result);
-    backendStatus.value = "online";
-  } catch (error) {
-    console.error("Backend offline:", error.message, error.response?.status, error.code);
-    backendStatus.value = "offline";
-  }
 }
 
 async function handleFileAdded({ id, name }) {
@@ -199,6 +188,38 @@ function handleLicenseResult(valid) {
   if (!valid) {
     console.error("License validation failed - app functionality may be limited");
     // App content is hidden by LicenseCheck component when invalid
+  } else {
+    // License validated successfully - now check backend status with retries
+    // The sidecar should be ready by now after license validation
+    checkBackendStatusWithRetry();
+  }
+}
+
+/**
+ * Check backend status with retry logic.
+ * The Python sidecar takes time to start up, so we retry a few times.
+ */
+async function checkBackendStatusWithRetry() {
+  const maxRetries = 8;
+  const retryDelay = 500; // ms
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await checkHealth();
+      console.log("Backend health:", result);
+      backendStatus.value = "online";
+      return; // Success - exit retry loop
+    } catch (error) {
+      console.log(`Backend check attempt ${attempt}/${maxRetries} failed:`, error.message);
+      if (attempt >= maxRetries) {
+        // All retries exhausted
+        console.error("Backend offline after all retries:", error.response?.status, error.code);
+        backendStatus.value = "offline";
+      } else {
+        // Wait before next retry
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
   }
 }
 </script>

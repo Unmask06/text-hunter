@@ -17,7 +17,7 @@
 
     "build:icons": "npx tauri icon public/app-icon.png",
 
-    "build": "cd frontend && npm run build",
+    "build": "cd frontend && npm run build:desktop",
     "build:desktop": "npm run build:sidecar-winos && npm run tauri build",
     "build:web": "cd frontend && npm run build:web",
 

@@ -1,11 +1,12 @@
 /**
- * Simple HTTP client using native fetch for better Tauri compatibility.
+ * Simple HTTP client using Tauri's fetch for desktop compatibility.
  *
  * URL configuration by environment:
  * - Desktop (Tauri): http://localhost:8000 (sidecar)
  * - Dev (vite): /api (proxied to localhost:8000)
  * - Production: https://api.xergiz.com/text-hunter
  */
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 
 // Determine API base URL based on environment
 const getBaseUrl = (): string => {
@@ -25,24 +26,34 @@ const getBaseUrl = (): string => {
 
 const BASE_URL = getBaseUrl();
 
+// Use Tauri fetch in desktop app, native fetch in web
+const useTauriFetch = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
+const httpFetch = useTauriFetch ? tauriFetch : window.fetch;
+
 export const httpClient = {
   async get<T>(endpoint: string): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
     console.log(`GET ${url}`);
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    try {
+      const response = await httpFetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      console.log(`Response status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      return response.json() as T;
+    } catch (error) {
+      console.error(`HTTP GET error:`, error);
+      throw error;
     }
-    return response.json() as T;
   },
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
     console.log(`POST ${url}`);
-    const response = await fetch(url, {
+    const response = await httpFetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: data ? JSON.stringify(data) : null,
@@ -56,7 +67,7 @@ export const httpClient = {
   async postBlob(endpoint: string, data?: unknown): Promise<{ blob: Blob; filename: string }> {
     const url = `${BASE_URL}${endpoint}`;
     console.log(`POST ${url}`);
-    const response = await fetch(url, {
+    const response = await httpFetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: data ? JSON.stringify(data) : null,

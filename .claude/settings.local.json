@@ -13,7 +13,9 @@
       "Bash(git rm:*)",
       "Bash(git check-ignore:*)",
       "Bash(python:*)",
-      "Bash(npx vue-tsc:*)"
+      "Bash(npx vue-tsc:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:v2.tauri.app)"
     ]
   }
 }

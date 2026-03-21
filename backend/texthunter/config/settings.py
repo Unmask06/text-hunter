@@ -7,5 +7,11 @@ CORS_ORIGINS: list[str] = [
     "https://xergiz.com",
     "https://www.xergiz.com",
     "https://api.xergiz.com",
+    "tauri://localhost",
+    "http://tauri.localhost",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
 ]
 

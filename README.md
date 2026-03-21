@@ -2,7 +2,27 @@
 
 Hunt and extract text patterns from PDF documents using powerful regex tools.
 
-TextHunter is a full-stack web application that allows you to upload PDF files, extract text content, and search for patterns using regular expressions. It features an intuitive Vue.js frontend with IndexedDB storage and a FastAPI backend for high-performance text processing.
+TextHunter is available as both a **web application** and a **native Windows desktop app**. The desktop version runs entirely offline with all processing happening locally on your machine.
+
+## 🖥️ Desktop App
+
+[![Download Latest](https://img.shields.io/github/v/release/Unmask06/text-hunter?label=Download&color=blue)](https://github.com/Unmask06/text-hunter/releases/latest)
+
+Download the latest Windows installer from the [Releases page](https://github.com/Unmask06/text-hunter/releases/latest).
+
+**Desktop Features:**
+- ✅ Works completely offline (no internet required)
+- ✅ All processing happens locally on your machine
+- ✅ Native Windows application with system tray integration
+- ✅ Automatic updates (coming soon)
+
+See [`DESKTOP-README.md`](DESKTOP-README.md) for installation and development instructions.
+
+---
+
+## 🌐 Web Application
+
+TextHunter is also available as a full-stack web application that allows you to upload PDF files, extract text content, and search for patterns using regular expressions. It features an intuitive Vue.js frontend with IndexedDB storage and a FastAPI backend for high-performance text processing.
 
 ## Features
 
@@ -15,10 +35,17 @@ TextHunter is a full-stack web application that allows you to upload PDF files, 
 
 ## Architecture
 
+### Web App
 - **Frontend**: Vue 3 + Vite + TypeScript + Tailwind CSS
 - **Backend**: FastAPI + Python 3.12+
 - **Storage**: IndexedDB (frontend) + in-memory processing (backend)
 - **Deployment**: Ready for containerization and cloud deployment
+
+### Desktop App
+- **Framework**: Tauri v2 (Rust-based)
+- **Frontend**: Vue 3 (same as web, bundled)
+- **Backend**: Python FastAPI sidecar (PyInstaller bundled)
+- **Platform**: Windows (NSIS installer)
 
 ## Quick Start
 

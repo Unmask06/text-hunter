@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev:frontend",
+    "frontendDist": "../frontend/dist",
+    "devUrl": "http://localhost:3000"
+  },
+  "bundle": {
+    "active": true,
+    "category": "DeveloperTool",
+    "copyright": "© 2024-2026 TextHunter. All rights reserved.",
+    "targets": ["nsis"],
+    "externalBin": ["bin/api/main"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "shortDescription": "Hunt and extract text patterns from PDF documents",
+    "longDescription": "TextHunter is a powerful desktop application for extracting text patterns from PDF documents using regex. Perfect for processing line lists, instrument lists, and equipment lists in the oil & gas industry.",
+    "resources": [],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    }
+  },
+  "productName": "TextHunter",
+  "mainBinaryName": "TextHunter",
+  "identifier": "com.xergiz.text-hunter",
+  "plugins": {},
+  "app": {
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 950,
+        "resizable": true,
+        "title": "TextHunter",
+        "width": 1200,
+        "useHttpsScheme": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  }
+}

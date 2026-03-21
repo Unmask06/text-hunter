@@ -1,6 +1,50 @@
-*cache*
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
 
 # Documentation build
-dist/
 frontend/docs/.vitepress/cache
 frontend/docs/.vitepress/dist
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+src-tauri/target/
+src-tauri/bin/api/*.exe
+src-tauri/bin/api/*.dll
+*.spec
+
+# Package locks (keep one)
+# package-lock.json
+# pnpm-lock.yaml
+
+# Environment files (keep .env.example only)
+.env
+.env.local
+.env.*.local

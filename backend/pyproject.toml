@@ -1,6 +1,6 @@
 [project]
 name = "texthunter"
-version = "0.6.0"
+version = "0.7.0"
 description = "Text Extractor - Backend API for regex matching and Excel generation"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -10,6 +10,8 @@ dependencies = [
     "pandas>=2.2.0",
     "openpyxl>=3.1.0",
     "grex>=1.0.1",
+    "requests>=2.31.0",
+    "tomli>=2.0.0",
 ]
 
 [project.scripts]
@@ -23,6 +25,7 @@ dev = [
     "types-openpyxl>=3.1.5.20250919",
     "pandas-stubs>=2.3.3.260113",
     "ruff>=0.8.0",
+    "pyinstaller>=6.19.0",
 ]
 
 [build-system]

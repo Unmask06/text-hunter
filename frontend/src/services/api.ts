@@ -1,7 +1,7 @@
 /**
  * API service layer for communicating with the FastAPI backend.
  */
-import api from "@/api/client.ts";
+import httpClient from "@/api/client.ts";
 import type { components } from "@/api/schema.ts";
 
 type Schemas = components["schemas"];
@@ -17,8 +17,7 @@ type Schemas = components["schemas"];
 export async function extractMatches(
   payload: Schemas["ExtractionRequest"],
 ): Promise<Schemas["ExtractionResponse"]> {
-  const response = await api.post("/extract", payload);
-  return response.data;
+  return httpClient.post<Schemas["ExtractionResponse"]>("/extract", payload);
 }
 
 /**
@@ -28,8 +27,7 @@ export async function extractMatches(
 export async function extractAllMatches(
   payload: Schemas["ExtractionRequest"],
 ): Promise<Schemas["ExtractionResponse"]> {
-  const response = await api.post("/extract-all", payload);
-  return response.data;
+  return httpClient.post<Schemas["ExtractionResponse"]>("/extract-all", payload);
 }
 
 /**
@@ -39,8 +37,7 @@ export async function extractAllMatches(
 export async function guessRegex(
   examples: Schemas["RegexGuessRequest"]["examples"],
 ): Promise<Schemas["RegexGuessResponse"]> {
-  const response = await api.post("/guess-regex", { examples });
-  return response.data;
+  return httpClient.post<Schemas["RegexGuessResponse"]>("/guess-regex", { examples });
 }
 
 /**
@@ -51,25 +48,11 @@ export async function guessRegex(
 export async function exportExcel(
   matches: Schemas["MatchResult"][],
   includeContext = true,
-): Promise<Blob> {
-  const response = await api.post(
-    "/export",
-    { matches, include_context: includeContext },
-    { responseType: "blob" },
-  );
-
-  // Extract filename from Content-Disposition header
-  const contentDisposition = response.headers["content-disposition"];
-  let filename = "extraction_results.xlsx";
-  if (contentDisposition) {
-    const match = contentDisposition.match(/filename=(.+)/);
-    if (match) {
-      filename = match[1];
-    }
-  }
+): Promise<void> {
+  const { blob, filename } = await httpClient.postBlob("/export", { matches, include_context: includeContext });
 
   // Trigger download
-  const url = window.URL.createObjectURL(response.data);
+  const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
@@ -77,8 +60,6 @@ export async function exportExcel(
   link.click();
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
-
-  return response.data;
 }
 
 /**
@@ -88,8 +69,7 @@ export async function checkHealth(): Promise<{
   status: string;
   timestamp: string;
 }> {
-  const response = await api.get("/health");
-  return response.data;
+  return httpClient.get<{ status: string; timestamp: string }>("/health");
 }
 
-export default api;
+export default httpClient;

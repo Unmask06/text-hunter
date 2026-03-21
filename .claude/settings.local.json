@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir)",
+      "Bash(cd /d \"D:\\\\Code\\\\text-hunter\")",
+      "Bash(chdir \"D:\\\\Code\\\\text-hunter\")",
+      "Bash(pyinstaller main-x86_64-pc-windows-msvc.spec --clean --noconfirm)",
+      "Bash(dir \"D:\\\\Code\\\\text-hunter\\\\src-tauri\\\\bin\\\\api\")",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(taskkill /IM \"TextHunter.exe\")",
+      "WebSearch",
+      "Bash(git rm:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(python:*)",
+      "Bash(npx vue-tsc:*)"
+    ]
+  }
+}

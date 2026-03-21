@@ -3,19 +3,13 @@ name: Release
 on:
   push:
     branches: [main]
-    paths:
-      - "frontend/**"
-      - "backend/**"
-      - ".github/workflows/release.yml"
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write  # Needed for creating releases
 
 jobs:
-  # 1. Identify trigger & 2. Detect changes
-  # On manual trigger: all outputs are true (nothing skipped)
-  # On push: only changed paths are true
+  # 1. Detect changed paths (for notification only)
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
@@ -33,15 +27,10 @@ jobs:
       - name: Set change outputs
         id: set-changes
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "frontend=true" >> "$GITHUB_OUTPUT"
-            echo "backend=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "frontend=${{ steps.filter.outputs.frontend }}" >> "$GITHUB_OUTPUT"
-            echo "backend=${{ steps.filter.outputs.backend }}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "frontend=${{ steps.filter.outputs.frontend || 'true' }}" >> "$GITHUB_OUTPUT"
+          echo "backend=${{ steps.filter.outputs.backend || 'true' }}" >> "$GITHUB_OUTPUT"
 
-  # 3. Build frontend
+  # 2. Build frontend (conditional on changes)
   build-frontend:
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true'
@@ -57,7 +46,7 @@ jobs:
           name: texthunter-dist
           path: frontend/dist/
 
-  # 3.1 Notify xergiz frontend
+  # 2.1 Notify xergiz frontend (conditional on changes)
   notify-xergiz-frontend:
     needs: [detect-changes, build-frontend]
     if: needs.detect-changes.outputs.frontend == 'true'
@@ -76,7 +65,7 @@ jobs:
               "repo": "${{ github.repository }}"
             }
 
-  # 4. Notify xergiz backend
+  # 2.2 Notify xergiz backend (conditional on changes)
   notify-xergiz-backend:
     needs: detect-changes
     if: needs.detect-changes.outputs.backend == 'true'
@@ -94,3 +83,99 @@ jobs:
               "run_id": "${{ github.run_id }}",
               "repo": "${{ github.repository }}"
             }
+
+  # 3. Build desktop app (Windows) - ALWAYS runs on push to main
+  build-desktop:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Install backend dependencies
+        run: cd backend && pip install uv && uv pip install --system .
+
+      - name: Get version from pyproject.toml
+        id: get-version
+        run: |
+          $version = (Get-Content backend/pyproject.toml | Select-String 'version = "(.*?)"').Matches.Groups[1].Value
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Build PyInstaller sidecar
+        run: |
+          cd backend
+          pyinstaller main-x86_64-pc-windows-msvc.spec --clean --noconfirm
+
+      - name: Copy sidecar to Tauri
+        run: |
+          Copy-Item backend/dist/main-x86_64-pc-windows-msvc.exe src-tauri/bin/api/main-x86_64-pc-windows-msvc.exe
+          Copy-Item backend/dist/main-x86_64-pc-windows-msvc.exe src-tauri/bin/api/main.exe
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Build Tauri app
+        run: npm run tauri build
+
+      - name: Create portable ZIP
+        run: |
+          $portableDir = New-Item -ItemType Directory -Path "TextHunter-portable"
+          Copy-Item src-tauri/target/release/TextHunter.exe $portableDir/
+          Copy-Item src-tauri/bin/api/main-x86_64-pc-windows-msvc.exe $portableDir/main.exe
+          Compress-Archive -Path $portableDir/* -DestinationPath "TextHunter-portable-${{ steps.get-version.outputs.version }}.zip"
+
+      - name: Upload NSIS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: nsis-installer
+          path: src-tauri/target/release/bundle/nsis/TextHunter_*.exe
+
+      - name: Upload portable ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: portable-zip
+          path: TextHunter-portable-*.zip
+
+  # 4. Create GitHub Release with desktop assets (ALWAYS runs)
+  create-release:
+    needs: build-desktop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download NSIS installer
+        uses: actions/download-artifact@v4
+        with:
+          name: nsis-installer
+          path: ./artifacts/
+
+      - name: Download portable ZIP
+        uses: actions/download-artifact@v4
+        with:
+          name: portable-zip
+          path: ./artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.build-desktop.outputs.version }}
+          name: TextHunter v${{ needs.build-desktop.outputs.version }}
+          files: artifacts/*
+          body_path: CHANGELOG.md
+          generate_release_notes: true
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,6 +6,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import FileList from "./components/FileList.vue";
 import FileUpload from "./components/FileUpload.vue";
+import LicenseCheck from "./components/LicenseCheck.vue";
 import RegexConfig from "./components/RegexConfig.vue";
 import ResultsTable from "./components/ResultsTable.vue";
 import {
@@ -101,9 +102,11 @@ function initPdfWorker() {
 
 async function checkBackendStatus() {
   try {
-    await checkHealth();
+    const result = await checkHealth();
+    console.log("Backend health:", result);
     backendStatus.value = "online";
-  } catch {
+  } catch (error) {
+    console.error("Backend offline:", error.message, error.response?.status, error.code);
     backendStatus.value = "offline";
   }
 }
@@ -191,12 +194,20 @@ async function handleExport() {
     isExporting.value = false;
   }
 }
+
+function handleLicenseResult(valid) {
+  if (!valid) {
+    console.error("License validation failed - app functionality may be limited");
+    // App content is hidden by LicenseCheck component when invalid
+  }
+}
 </script>
 
 <template>
-  <div class="app-layout">
-    <!-- Header -->
-    <header class="main-header">
+  <LicenseCheck @validated="handleLicenseResult">
+    <div class="app-layout">
+      <!-- Header -->
+      <header class="main-header">
       <div class="container mx-auto flex items-center justify-between px-6">
         <div class="flex items-center gap-4">
           <div class="logo-container">
@@ -217,7 +228,7 @@ async function handleExport() {
         </div>
 
         <div class="flex items-center gap-4">
-          <a href="/products/text-hunter/docs/" target="_blank" class="btn-docs" title="Open Documentation">
+          <a href="/docs/" target="_blank" class="btn-docs" title="Open Documentation">
             <span class="flex items-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -279,6 +290,7 @@ async function handleExport() {
       </div>
     </footer>
   </div>
+  </LicenseCheck>
 </template>
 
 <style scoped>

@@ -75,23 +75,26 @@ function serveStaticDocs() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [serveStaticDocs(), vue(), tailwindcss(), checker({
-    typescript: true, // 1. Enable TypeScript checking
-    vueTsc: true      // 2. Enable Vue-specific checking
+    typescript: true,
+    vueTsc: true
   })],
 
-  // Production: served at /products/text-hunter/ subpath on xergiz.com
-  base: "/products/text-hunter/",
+  // Base path for production: /products/text-hunter/
+  // For desktop (Tauri) and dev, use "/" (overridden by environment)
+  base: process.env.VITE_BASE_PATH || "/",
 
   build: {
-    outDir: "dist/products/text-hunter",
+    outDir: "dist",
   },
 
   // Development: proxy API requests to the local backend server
   server: {
+    port: 3000,
     proxy: {
-      '/text-hunter': {
-        target: 'http://localhost:8000',
+      '/api': {
+        target: 'http://localhost:8000',  // Consistent with desktop app port
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     },
     fs: {

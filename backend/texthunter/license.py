@@ -7,6 +7,7 @@ Version is validated against the API to ensure users have the latest release.
 
 import json
 import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 import requests
@@ -22,6 +23,10 @@ VERSION_API_URL = "https://api.xergiz.com/text-hunter/"
 # Build-specific seed to prevent simple trial reset
 # Change this value when creating a new build to invalidate old trials
 BUILD_SEED = "texthunter-build-0.7.0-20260321"
+
+# Hardcoded version for frozen/pyinstaller builds
+# This is the source of truth when pyproject.toml is not available
+FROZEN_VERSION = "0.7.0"
 
 
 def get_trial_start_date() -> datetime | None:
@@ -47,15 +52,26 @@ def get_trial_start_date() -> datetime | None:
 
 
 def get_local_version() -> tuple:
-    """Get current app version from pyproject.toml."""
-    import tomli
+    """Get current app version from pyproject.toml or frozen constant."""
+    # In frozen builds (PyInstaller), pyproject.toml is not bundled
+    # Check if running as a frozen application
+    # PyInstaller sets sys._MEIPASS to the temp extraction folder
+    if hasattr(sys, 'frozen') and getattr(sys, 'frozen', False):
+        return parse_version(FROZEN_VERSION)
+
+    # Use tomllib (Python 3.11+) instead of tomli to avoid mypyc cache issues
+    import tomllib
 
     pyproject = Path(__file__).parent.parent / "pyproject.toml"
-    with open(pyproject, "rb") as f:
-        config = tomli.load(f)
+    try:
+        with open(pyproject, "rb") as f:
+            config = tomllib.load(f)
 
-    version = config["project"]["version"]
-    return parse_version(version)
+        version = config["project"]["version"]
+        return parse_version(version)
+    except FileNotFoundError:
+        # Fallback to frozen version if pyproject.toml not found
+        return parse_version(FROZEN_VERSION)
 
 
 def parse_version(version_str: str) -> tuple:

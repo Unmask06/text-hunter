@@ -6,14 +6,39 @@ const status = ref<LicenseStatus | null>(null);
 const isLoading = ref(true);
 const error = ref("");
 const isOffline = ref(false);
+const retryCount = ref(0);
+const maxRetries = 10;
+const retryDelay = 500; // ms
+const showSuccessModal = ref(true);
 
 const emit = defineEmits<{
   validated: [valid: boolean];
 }>();
 
+/**
+ * Wait for sidecar to be ready with retries.
+ * The Python sidecar takes time to start up.
+ */
+async function waitForSidecar(): Promise<LicenseStatus> {
+  while (retryCount.value < maxRetries) {
+    try {
+      const result = await checkLicense();
+      return result;
+    } catch (e) {
+      retryCount.value++;
+      if (retryCount.value >= maxRetries) {
+        throw e;
+      }
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+  }
+  throw new Error("Max retries reached");
+}
+
 onMounted(async () => {
   try {
-    const result = await checkLicense();
+    const result = await waitForSidecar();
     status.value = result;
 
     if (!result.valid) {
@@ -22,13 +47,17 @@ onMounted(async () => {
     } else {
       // Valid license - emit success and continue
       isOffline.value = result.offline ?? false;
+      // Hide success modal after short delay
+      setTimeout(() => {
+        showSuccessModal.value = false;
+      }, 800);
       setTimeout(() => {
         emit("validated", true);
-      }, 500); // Small delay to show success state
+      }, 1000);
     }
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : "Unknown error";
-    error.value = `Failed to connect to license server: ${errorMessage}`;
+    error.value = `Failed to connect to backend. Please ensure the app was installed correctly. ${errorMessage}`;
     emit("validated", false);
   } finally {
     isLoading.value = false;
@@ -41,7 +70,9 @@ onMounted(async () => {
     <div class="license-modal">
       <div class="spinner"></div>
       <p class="mt-4 text-slate-300">Validating license...</p>
-      <p class="mt-2 text-xs text-slate-500">Checking GitHub releases</p>
+      <p class="mt-2 text-xs text-slate-500">
+        {{ retryCount < maxRetries ? `Attempting connection (${retryCount + 1}/${maxRetries})...` : 'Checking version...' }}
+      </p>
     </div>
   </div>
 
@@ -75,7 +106,7 @@ onMounted(async () => {
     </div>
   </div>
 
-  <div v-else-if="status?.valid" class="license-overlay success">
+  <div v-else-if="status?.valid && showSuccessModal" class="license-overlay success">
     <div class="license-modal">
       <svg class="w-12 h-12 text-emerald-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -93,8 +124,8 @@ onMounted(async () => {
     </div>
   </div>
 
-  <!-- Hidden container that reveals app content when valid -->
-  <div v-if="status?.valid" class="contents">
+  <!-- App content - always shown when license is valid -->
+  <div v-if="status?.valid" :style="{ opacity: showSuccessModal ? 0 : 1, transition: 'opacity 0.3s' }">
     <slot></slot>
   </div>
 </template>

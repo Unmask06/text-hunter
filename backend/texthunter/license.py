@@ -1,7 +1,7 @@
 """License validation module for TextHunter desktop app.
 
-This module handles version validation by checking against GitHub releases
-to control distribution until a full licensing system is implemented.
+This module handles trial period validation.
+Users get a 3-day trial from first launch, after which a new build is required.
 """
 
 import json
@@ -9,23 +9,20 @@ import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import requests
-import tomli
-
 # Configuration
 LICENSE_FILE = Path.home() / ".texthunter" / "license.json"
-CACHE_DURATION_DAYS = 7
-GRACE_PERIOD_DAYS = 3
-GITHUB_PAT = os.getenv("GITHUB_PAT", "")
-REPO_OWNER = "Unmask06"
-REPO_NAME = "text-hunter"
+TRIAL_DURATION_DAYS = 3
+
+# Build-specific seed to prevent simple trial reset
+# Change this value when creating a new build to invalidate old trials
+BUILD_SEED = "texthunter-build-0.7.0-20260321"
 
 
-def get_cached_license() -> dict | None:
-    """Load cached license if exists and not expired.
+def get_trial_start_date() -> datetime | None:
+    """Get the trial start date from license file or None if not found.
 
     Returns:
-        dict with license data or None if not cached/expired
+        datetime of trial start or None if no trial has started
     """
     if not LICENSE_FILE.exists():
         return None
@@ -36,184 +33,109 @@ def get_cached_license() -> dict | None:
     except (json.JSONDecodeError, OSError):
         return None
 
-    cached_at = datetime.fromisoformat(data.get("cached_at", ""))
-    if datetime.now() - cached_at > timedelta(days=CACHE_DURATION_DAYS):
-        return None  # Cache expired
-
-    return data
-
-
-def get_grace_period_license() -> dict | None:
-    """Get license during grace period when offline.
-
-    Returns:
-        dict with license data or None if grace period expired
-    """
-    if not LICENSE_FILE.exists():
+    trial_start_str = data.get("trial_start")
+    if not trial_start_str:
         return None
 
-    try:
-        with open(LICENSE_FILE) as f:
-            data = json.load(f)
-    except (json.JSONDecodeError, OSError):
-        return None
-
-    expires_at = datetime.fromisoformat(data.get("expires_at", ""))
-    if not expires_at:
-        return None
-
-    grace_end = expires_at + timedelta(days=GRACE_PERIOD_DAYS)
-
-    if datetime.now() <= grace_end:
-        return data
-
-    return None
+    return datetime.fromisoformat(trial_start_str)
 
 
-def fetch_latest_release() -> dict:
-    """Fetch latest release from GitHub API.
+def start_trial() -> dict:
+    """Start a new trial period.
+
+    Creates the license file with the trial start date and build seed.
 
     Returns:
-        dict with release information
-
-    Raises:
-        requests.RequestException: If API call fails
+        dict with trial information
     """
-    headers = {"Authorization": f"Bearer {GITHUB_PAT}"} if GITHUB_PAT else {}
-    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/releases/latest"
+    trial_start = datetime.now()
+    trial_end = trial_start + timedelta(days=TRIAL_DURATION_DAYS)
 
-    response = requests.get(url, headers=headers, timeout=10)
-    response.raise_for_status()
-    return response.json()
+    license_data = {
+        "trial_start": trial_start.isoformat(),
+        "trial_end": trial_end.isoformat(),
+        "build_seed": BUILD_SEED,
+        "created_at": datetime.now().isoformat(),
+    }
 
-
-def parse_version(tag: str) -> tuple[int, int, int]:
-    """Parse version tag like 'v0.7.0' to tuple (0, 7, 0).
-
-    Args:
-        tag: Version string from GitHub releases
-
-    Returns:
-        Tuple of (major, minor, patch) version numbers
-    """
-    version = tag.lstrip('v')
-    parts = version.split('.')
-    return (
-        int(parts[0]) if len(parts) > 0 else 0,
-        int(parts[1]) if len(parts) > 1 else 0,
-        int(parts[2]) if len(parts) > 2 else 0,
-    )
-
-
-def get_local_version() -> tuple[int, int, int]:
-    """Get current app version from pyproject.toml.
-
-    Returns:
-        Tuple of (major, minor, patch) version numbers
-    """
-    pyproject = Path(__file__).parent.parent / "pyproject.toml"
-    with open(pyproject, "rb") as f:
-        config = tomli.load(f)
-
-    version_str = config["project"]["version"]
-    return parse_version(version_str)
-
-
-def save_license(data: dict) -> None:
-    """Save license data to file.
-
-    Args:
-        data: License data to persist
-    """
     LICENSE_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(LICENSE_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+        json.dump(license_data, f, indent=2)
+
+    return {
+        "valid": True,
+        "trial_start": trial_start.strftime("%Y-%m-%d %H:%M"),
+        "trial_end": trial_end.strftime("%Y-%m-%d %H:%M"),
+        "days_remaining": TRIAL_DURATION_DAYS,
+        "message": f"Trial started. Expires in {TRIAL_DURATION_DAYS} days.",
+    }
 
 
 def validate_license() -> dict:
-    """Validate license by checking GitHub releases.
+    """Validate the trial period.
 
-    This function:
-    1. Checks for cached license (valid for 7 days)
-    2. If expired/missing, fetches latest release from GitHub
-    3. Compares local version with latest release
-    4. Caches result for future use
-    5. Handles offline scenarios with grace period
+    Checks if:
+    1. Trial exists and hasn't expired
+    2. Build seed matches (prevents copying license from old builds)
 
     Returns:
         dict with keys:
-            - valid: bool - whether license is valid
+            - valid: bool - whether trial is active
             - message: str - human readable status
-            - cached: bool - whether result is from cache
-            - offline: bool - whether operating in offline mode
-            - details: dict - full license details
+            - trial_expired: bool - specifically indicates trial expiration
+            - days_remaining: int - days left in trial
+            - trial_end: str - formatted trial end date
     """
-    # Check cache first
-    cached = get_cached_license()
-    if cached and cached.get("valid"):
-        return {
-            "valid": True,
-            "cached": True,
-            "message": "License validated from cache",
-            "details": cached
-        }
+    # Check if license file exists
+    if not LICENSE_FILE.exists():
+        # First run - start trial
+        return start_trial()
 
-    # Fetch latest release
+    # Load existing license
     try:
-        release = fetch_latest_release()
-        latest_version = parse_version(release["tag_name"])
-        current_version = get_local_version()
+        with open(LICENSE_FILE) as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        # Corrupted file - restart trial
+        return start_trial()
 
-        # Compare versions: user must have >= latest release version
-        is_valid = current_version >= latest_version
+    # Check build seed mismatch (new build required)
+    stored_seed = data.get("build_seed", "")
+    if stored_seed != BUILD_SEED:
+        # Different build - clear old license and start fresh trial
+        return start_trial()
 
-        # Build license data
-        license_data = {
-            "valid": is_valid,
-            "local_version": ".".join(map(str, current_version)),
-            "latest_version": ".".join(map(str, latest_version)),
-            "cached_at": datetime.now().isoformat(),
-            "expires_at": (datetime.now() + timedelta(days=CACHE_DURATION_DAYS)).isoformat(),
-            "release_url": release.get("html_url", ""),
-            "release_name": release.get("name", "")
-        }
-        save_license(license_data)
+    # Check trial expiration
+    trial_end_str = data.get("trial_end")
+    if not trial_end_str:
+        return start_trial()
 
-        if not is_valid:
-            return {
-                "valid": False,
-                "message": "Update required. Please download the latest version from GitHub releases.",
-                "details": license_data
-            }
+    trial_end = datetime.fromisoformat(trial_end_str)
+    now = datetime.now()
 
-        return {
-            "valid": True,
-            "message": "License validated successfully",
-            "details": license_data
-        }
+    # Calculate days remaining
+    time_remaining = trial_end - now
+    days_remaining = max(0, time_remaining.days)
 
-    except requests.RequestException as e:
-        # Offline - check grace period
-        grace_license = get_grace_period_license()
-        if grace_license and grace_license.get("valid"):
-            return {
-                "valid": True,
-                "cached": True,
-                "offline": True,
-                "message": "Offline mode - using grace period",
-                "details": grace_license
-            }
-
+    if now > trial_end:
+        # Trial expired
         return {
             "valid": False,
-            "offline": True,
-            "message": f"Cannot validate license. Please check your internet connection. ({str(e)})"
+            "trial_expired": True,
+            "trial_end": trial_end.strftime("%Y-%m-%d %H:%M"),
+            "days_remaining": 0,
+            "message": "Trial period expired. Please download a new build of TextHunter.",
         }
-    except Exception as e:
-        return {
-            "valid": False,
-            "message": f"License validation error: {str(e)}"
-        }
+
+    # Trial still active
+    return {
+        "valid": True,
+        "trial_expired": False,
+        "trial_start": data.get("trial_start", "").replace("T", " ").split(".")[0],
+        "trial_end": trial_end.strftime("%Y-%m-%d %H:%M"),
+        "days_remaining": days_remaining,
+        "message": f"Trial active. {days_remaining} day(s) remaining.",
+    }
 
 
 def clear_license() -> dict:
@@ -230,3 +152,17 @@ def clear_license() -> dict:
             return {"message": f"Failed to clear license: {str(e)}", "success": False}
 
     return {"message": "No license file found", "success": True}
+
+
+def get_trial_info() -> dict:
+    """Get current trial information without modifying state.
+
+    Returns:
+        dict with trial status information
+    """
+    result = validate_license()
+    return {
+        "is_trial": True,
+        "trial_duration_days": TRIAL_DURATION_DAYS,
+        **result,
+    }

@@ -15,6 +15,9 @@ dist/
 dist-ssr/
 *.local
 
+# Generated VitePress docs (built artifact, served via public/ in dev)
+public/docs/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

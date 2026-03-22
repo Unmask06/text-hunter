@@ -3,12 +3,22 @@
 import logging
 import re
 from collections.abc import Iterator
+from functools import lru_cache
 
 from grex import RegExpBuilder
 
 from texthunter.api.schemas import MatchResult
 
 logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=256)
+def _compile_pattern(pattern: str) -> re.Pattern:
+    """Compile and cache a regex pattern. Raises ValueError on invalid syntax."""
+    try:
+        return re.compile(pattern)
+    except re.error as e:
+        raise ValueError(f"Invalid regex pattern: {e}") from e
 
 
 def extract_matches(
@@ -31,8 +41,8 @@ def extract_matches(
     """
     logger.debug("Compiling keyword regex: %s", keyword_regex)
     try:
-        pattern = re.compile(keyword_regex)
-    except re.error as e:
+        pattern = _compile_pattern(keyword_regex)
+    except ValueError as e:
         logger.error("Invalid keyword regex: %s", e)
         raise ValueError(f"Invalid keyword regex: {e}") from e
 
@@ -40,8 +50,8 @@ def extract_matches(
     if file_identifier_regex:
         logger.debug("Compiling file identifier regex: %s", file_identifier_regex)
         try:
-            file_pattern = re.compile(file_identifier_regex)
-        except re.error as e:
+            file_pattern = _compile_pattern(file_identifier_regex)
+        except ValueError as e:
             logger.error("Invalid file identifier regex: %s", e)
             raise ValueError(f"Invalid file identifier regex: {e}") from e
 
@@ -141,7 +151,9 @@ def guess_regex(examples: list[str]) -> tuple[str, str]:
         logger.info("Generated pattern: %s", pattern)
         return pattern, explanation
 
-    except Exception as e:  # TODO: specify exception
+    except (ValueError, TypeError, RuntimeError) as e:
+        # grex (RegExpBuilder) raises ValueError/TypeError for bad inputs and
+        # RuntimeError for internal Rust-side failures.
         logger.error("Failed to generate regex: %s", e)
         raise ValueError(
             f"Failed to generate regex from examples: {e}. Please add regex manually."

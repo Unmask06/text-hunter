@@ -71,7 +71,7 @@ async function handleGenerateRegex() {
     testResults.value = result.test_results;
   } catch (error) {
     console.error('Failed to generate regex:', error);
-    generateError.value = error.response?.data?.detail || 'Failed to generate pattern';
+    generateError.value = error instanceof Error ? error.message : 'Failed to generate pattern';
   } finally {
     isGenerating.value = false;
   }

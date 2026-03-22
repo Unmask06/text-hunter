@@ -133,7 +133,11 @@ async def export_excel(payload: ExportRequest):
         logger.warning("Export requested with no matches")
         raise HTTPException(status_code=400, detail="No matches to export")
 
-    buffer = generate_excel(payload.matches, payload.include_context)
+    try:
+        buffer = generate_excel(payload.matches, payload.include_context)
+    except Exception as e:
+        logger.error("Excel generation failed: %s", str(e))
+        raise HTTPException(status_code=500, detail="Failed to generate Excel file") from e
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"extraction_results_{timestamp}.xlsx"

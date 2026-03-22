@@ -4,6 +4,7 @@ from io import BytesIO
 
 import pandas as pd
 from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
 
 from texthunter.api.schemas import MatchResult
 
@@ -69,21 +70,15 @@ def generate_excel(matches: list[MatchResult], include_context: bool = True) -> 
             cell.font = header_font
             cell.alignment = Alignment(horizontal="center", vertical="center")
 
-        # Auto-adjust column widths
-        for column in worksheet.columns:
-            max_length = 0
-            column_letter = column[0].column_letter
-
-            for cell in column:
-                try:
-                    if cell.value:
-                        max_length = max(max_length, len(str(cell.value)))
-                except (TypeError, AttributeError):
-                    pass
-
-            # Cap width and add padding
-            adjusted_width = min(max_length + 2, 50)
-            worksheet.column_dimensions[column_letter].width = adjusted_width
+        # Auto-adjust column widths using pandas (vectorized, avoids cell-by-cell iteration)
+        for col_idx, col_name in enumerate(df.columns, start=1):
+            header_len = len(str(col_name))
+            if len(df) > 0:
+                data_max = int(df[col_name].astype(str).str.len().max())
+            else:
+                data_max = 0
+            adjusted_width = min(max(header_len, data_max) + 2, 50)
+            worksheet.column_dimensions[get_column_letter(col_idx)].width = adjusted_width
 
         # Freeze the header row
         worksheet.freeze_panes = "A2"

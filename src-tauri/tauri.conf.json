@@ -9,7 +9,7 @@
   "bundle": {
     "active": true,
     "category": "DeveloperTool",
-    "copyright": "© 2024-2026 TextHunter. All rights reserved.",
+    "copyright": "© 2024-2026 PDFHunter. All rights reserved.",
     "targets": ["nsis"],
     "externalBin": ["bin/api/main"],
     "icon": [
@@ -18,8 +18,8 @@
       "icons/128x128@2x.png",
       "icons/icon.ico"
     ],
-    "shortDescription": "Hunt and extract text patterns from PDF documents",
-    "longDescription": "TextHunter is a powerful desktop application for extracting text patterns from PDF documents using regex. Perfect for processing line lists, instrument lists, and equipment lists in the oil & gas industry.",
+    "shortDescription": "Extract text and detect P&ID symbols from PDF documents",
+    "longDescription": "PDFHunter is a powerful desktop application for extracting text patterns and detecting P&ID symbols from PDF documents. Perfect for processing line lists, instrument lists, and equipment lists in the oil & gas industry.",
     "resources": [],
     "windows": {
       "certificateThumbprint": null,
@@ -28,8 +28,8 @@
     }
   },
   "version": "0.7.0",
-  "productName": "TextHunter",
-  "mainBinaryName": "TextHunter",
+  "productName": "PDFHunter",
+  "mainBinaryName": "PDFHunter",
   "identifier": "com.xergiz.text-hunter",
   "plugins": {},
   "app": {
@@ -38,7 +38,7 @@
         "fullscreen": false,
         "height": 950,
         "resizable": true,
-        "title": "TextHunter",
+        "title": "PDFHunter",
         "width": 1200,
         "useHttpsScheme": true
       }

@@ -38,8 +38,8 @@ PORT_API = 8000
 server_instance = None
 
 app = FastAPI(
-    title="TextHunter API",
-    description="Hunt and extract text patterns from PDF documents",
+    title="PDFHunter API",
+    description="Extract text patterns and detect P&ID symbols from PDF documents",
     version=version("texthunter"),
 )
 
@@ -54,7 +54,7 @@ app.add_middleware(
 
 app.include_router(router)
 
-logger.info("TextHunter API initialized")
+logger.info("PDFHunter API initialized")
 
 
 @app.get("/")
@@ -62,7 +62,7 @@ async def root() -> dict[str, str]:
     """Root endpoint with API info."""
     logger.debug("Root endpoint accessed")
     return {
-        "name": "TextHunter API",
+        "name": "PDFHunter API",
         "version": version("texthunter"),
         "docs": "/docs",
     }
@@ -74,7 +74,7 @@ from texthunter.license import validate_license, clear_license
 async def connect() -> dict:
     """Connection endpoint for Tauri sidecar."""
     return {
-        "message": f"Connected to TextHunter API on port {PORT_API}",
+        "message": f"Connected to PDFHunter API on port {PORT_API}",
         "data": {
             "port": PORT_API,
             "pid": os.getpid(),
@@ -148,7 +148,7 @@ def start_input_thread():
 
 
 def run_server() -> None:
-    """Run the TextHunter API server."""
+    """Run the PDFHunter API server."""
     uvicorn.run("texthunter.main:app", host="localhost", port=PORT_API, reload=False)
 
 

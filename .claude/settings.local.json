@@ -15,7 +15,14 @@
       "Bash(python:*)",
       "Bash(npx vue-tsc:*)",
       "Bash(curl:*)",
-      "WebFetch(domain:v2.tauri.app)"
+      "WebFetch(domain:v2.tauri.app)",
+      "Bash(findstr :3000)",
+      "Bash(findstr LISTENING)",
+      "Bash(findstr :8000)",
+      "Bash(cd /d /d/text-hunter/frontend)",
+      "Bash(ls -la d:/Code/text-hunter/frontend/src/main.*)",
+      "WebFetch(domain:api.xergiz.com)",
+      "Bash(./node_modules/.bin/vue-tsc --noEmit)"
     ]
   }
 }

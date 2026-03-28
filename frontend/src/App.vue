@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 /**
  * App.vue - Main application component
  * TextHunter - Hunt and extract text patterns from PDF documents
@@ -9,8 +9,8 @@ import FileUpload from "./components/FileUpload.vue";
 import LicenseCheck from "./components/LicenseCheck.vue";
 import RegexConfig from "./components/RegexConfig.vue";
 import ResultsTable from "./components/ResultsTable.vue";
+import type { components } from "./api/schema.ts";
 import {
-  checkHealth,
   exportExcel,
   extractAllMatches,
   extractMatches,
@@ -21,23 +21,26 @@ import {
   getAllExtractedText,
   getAllPdfs,
   getPdfById,
+  type PdfRecord,
   storeExtractedText,
   updatePdfStatus,
 } from "./services/db.ts";
 
+type MatchResult = components["schemas"]["MatchResult"];
+
 // State
-const files = ref([]);
-const matches = ref([]);
-const allMatches = ref([]);
+const files = ref<PdfRecord[]>([]);
+const matches = ref<MatchResult[]>([]);
+const allMatches = ref<MatchResult[]>([]);
 const totalCount = ref(0);
 const isExtracting = ref(false);
 const isExporting = ref(false);
-const currentConfig = ref({ keywordRegex: "", fileIdentifierRegex: null });
-const backendStatus = ref("checking"); // 'checking', 'online', 'offline'
+const currentConfig = ref({ keywordRegex: "", fileIdentifierRegex: null as string | null });
 const isLoadingFiles = ref(false);
+const exportedFilePath = ref<string | null>(null);
 
 // Web Worker for PDF processing
-let pdfWorker = null;
+let pdfWorker: Worker | null = null;
 
 // Computed
 const hasReadyFiles = computed(() =>
@@ -80,8 +83,14 @@ function initPdfWorker() {
     type: "module",
   });
 
-  pdfWorker.onmessage = async (event) => {
-    const { type, pdfId, pageCount, pages, error } = event.data;
+  pdfWorker.onmessage = async (event: MessageEvent) => {
+    const { type, pdfId, pageCount, pages, error } = event.data as {
+      type: string;
+      pdfId: number;
+      pageCount: number;
+      pages: Record<string, string>;
+      error: string;
+    };
 
     if (type === "complete") {
       // Store extracted text
@@ -100,7 +109,7 @@ function initPdfWorker() {
   };
 }
 
-async function handleFileAdded({ id, name }) {
+async function handleFileAdded({ id, name }: { id: number; name: string }) {
   await loadFiles();
 
   // Start processing
@@ -109,7 +118,7 @@ async function handleFileAdded({ id, name }) {
     await updatePdfStatus(id, FileStatus.PROCESSING);
     await loadFiles();
 
-    pdfWorker.postMessage({
+    pdfWorker!.postMessage({
       type: "extract",
       pdfId: id,
       pdfData: pdf.blob,
@@ -117,12 +126,12 @@ async function handleFileAdded({ id, name }) {
   }
 }
 
-async function handleDeleteFile(id) {
+async function handleDeleteFile(id: number) {
   await deletePdf(id);
   await loadFiles();
 }
 
-async function handleExtract(config) {
+async function handleExtract(config: { keywordRegex: string; fileIdentifierRegex: string | null }) {
   if (!hasReadyFiles.value) return;
 
   isExtracting.value = true;
@@ -159,11 +168,9 @@ async function handleExtract(config) {
     } else {
       allMatches.value = result.matches;
     }
-  } catch (error) {
-    console.error("Extraction error:", error);
-    alert(
-      "Extraction failed: " + (error.response?.data?.detail || error.message),
-    );
+  } catch (e) {
+    console.error("Extraction error:", e);
+    alert("Extraction failed: " + (e instanceof Error ? e.message : String(e)));
   } finally {
     isExtracting.value = false;
   }
@@ -173,54 +180,39 @@ async function handleExport() {
   if (!canExport.value) return;
 
   isExporting.value = true;
+  exportedFilePath.value = null;
 
   try {
-    await exportExcel(allMatches.value, true);
-  } catch (error) {
-    console.error("Export error:", error);
-    alert("Export failed: " + error.message);
+    exportedFilePath.value = await exportExcel(allMatches.value, true);
+  } catch (e) {
+    console.error("Export error:", e);
+    alert("Export failed: " + (e instanceof Error ? e.message : String(e)));
   } finally {
     isExporting.value = false;
   }
 }
 
-function handleLicenseResult(valid) {
-  if (!valid) {
-    console.error("License validation failed - app functionality may be limited");
-    // App content is hidden by LicenseCheck component when invalid
-  } else {
-    // License validated successfully - now check backend status with retries
-    // The sidecar should be ready by now after license validation
-    checkBackendStatusWithRetry();
+/**
+ * Open the exported Excel file with default application.
+ * Only available on desktop.
+ */
+async function handleOpenFile() {
+  if (!exportedFilePath.value) return;
+
+  try {
+    const { openFile } = await import("@/utils/export.ts");
+    await openFile(exportedFilePath.value);
+  } catch (e) {
+    console.error("Failed to open file:", e);
+    alert("Failed to open file: " + (e instanceof Error ? e.message : String(e)));
   }
 }
 
-/**
- * Check backend status with retry logic.
- * The Python sidecar takes time to start up, so we retry a few times.
- */
-async function checkBackendStatusWithRetry() {
-  const maxRetries = 8;
-  const retryDelay = 500; // ms
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const result = await checkHealth();
-      console.log("Backend health:", result);
-      backendStatus.value = "online";
-      return; // Success - exit retry loop
-    } catch (error) {
-      console.log(`Backend check attempt ${attempt}/${maxRetries} failed:`, error.message);
-      if (attempt >= maxRetries) {
-        // All retries exhausted
-        console.error("Backend offline after all retries:", error.response?.status, error.code);
-        backendStatus.value = "offline";
-      } else {
-        // Wait before next retry
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
-      }
-    }
+function handleLicenseResult(valid: boolean) {
+  if (!valid) {
+    console.error("License validation failed - app functionality may be limited");
   }
+  // License validated - backend is confirmed working, no need for additional health check
 }
 </script>
 
@@ -231,20 +223,8 @@ async function checkBackendStatusWithRetry() {
       <header class="main-header">
       <div class="container mx-auto flex items-center justify-between px-6">
         <div class="flex items-center gap-4">
-          <div class="logo-container">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
           <div>
             <h1 class="app-title">TextHunter</h1>
-            <div class="status-indicator">
-              <div :class="['status-dot', backendStatus === 'online' ? 'status-online' : 'status-offline']"></div>
-              <span class="text-[10px] font-bold uppercase tracking-widest">
-                {{ backendStatus === 'online' ? 'API Online' : 'API Offline' }}
-              </span>
-            </div>
           </div>
         </div>
 
@@ -273,6 +253,20 @@ async function checkBackendStatusWithRetry() {
               {{ isExporting ? 'Exporting...' : 'Export to Excel' }}
             </span>
           </button>
+          <button
+            v-if="exportedFilePath"
+            class="btn-open-file"
+            @click="handleOpenFile"
+            title="Open exported Excel file"
+          >
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span class="sr-only">Open File</span>
+            </span>
+          </button>
         </div>
       </div>
     </header>
@@ -282,7 +276,7 @@ async function checkBackendStatusWithRetry() {
       <!-- Left Column: Controls -->
       <aside class="lg:col-span-3 space-y-6">
         <section>
-          <FileUpload :disabled="backendStatus === 'offline'" @file-added="handleFileAdded" />
+          <FileUpload @file-added="handleFileAdded" />
         </section>
 
         <section>
@@ -333,24 +327,6 @@ async function checkBackendStatusWithRetry() {
   @apply text-2xl font-black text-white tracking-tight leading-none;
 }
 
-.status-indicator {
-  @apply flex items-center gap-2 mt-1;
-}
-
-.status-dot {
-  @apply w-2 h-2 rounded-full;
-}
-
-.status-online {
-  @apply bg-emerald-500;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
-}
-
-.status-offline {
-  @apply bg-red-500;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
-}
-
 .btn-docs {
   @apply px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm transition-all;
   @apply hover:bg-indigo-500 active:transform active:scale-95 border border-white/5;
@@ -359,6 +335,11 @@ async function checkBackendStatusWithRetry() {
 .btn-export {
   @apply px-5 py-2.5 rounded-xl bg-slate-800 text-white font-semibold text-sm transition-all;
   @apply hover:bg-slate-700 active:transform active:scale-95 disabled:opacity-50 border border-white/5;
+}
+
+.btn-open-file {
+  @apply p-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm transition-all;
+  @apply hover:bg-emerald-500 active:transform active:scale-95 border border-white/5;
 }
 
 .main-footer {

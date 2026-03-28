@@ -7,9 +7,10 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "target": "esnext",
+    "target": "ESNext",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
     // For nodejs:

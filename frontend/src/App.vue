@@ -1,7 +1,7 @@
 <script setup>
 /**
  * App.vue - Main application component
- * TextHunter - Hunt and extract text patterns from PDF documents
+ * PDFHunter - Extract text patterns and detect P&ID symbols from PDF documents
  */
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import FileList from "./components/FileList.vue";
@@ -9,6 +9,7 @@ import FileUpload from "./components/FileUpload.vue";
 import LicenseCheck from "./components/LicenseCheck.vue";
 import RegexConfig from "./components/RegexConfig.vue";
 import ResultsTable from "./components/ResultsTable.vue";
+import SymbolDetector from "./components/SymbolDetector.vue";
 import {
   checkHealth,
   exportExcel,
@@ -24,6 +25,9 @@ import {
   storeExtractedText,
   updatePdfStatus,
 } from "./services/db.ts";
+
+// Active tab: 'text' | 'vision'
+const activeTab = ref("text");
 
 // State
 const files = ref([]);
@@ -50,14 +54,9 @@ const canExport = computed(
 
 // Initialize
 onMounted(async () => {
-  // Load existing files from IndexedDB
   await loadFiles();
-
-  // Initialize PDF worker
   initPdfWorker();
-
-  // Note: Backend status check is deferred until after license validation
-  // to ensure the sidecar has time to start up
+  // Backend status check deferred until after license validation
 });
 
 onUnmounted(() => {
@@ -84,12 +83,9 @@ function initPdfWorker() {
     const { type, pdfId, pageCount, pages, error } = event.data;
 
     if (type === "complete") {
-      // Store extracted text
       for (const [pageNo, text] of Object.entries(pages)) {
         await storeExtractedText(pdfId, parseInt(pageNo), text);
       }
-
-      // Update file status
       await updatePdfStatus(pdfId, FileStatus.READY, { pageCount });
       await loadFiles();
     } else if (type === "error") {
@@ -102,18 +98,11 @@ function initPdfWorker() {
 
 async function handleFileAdded({ id, name }) {
   await loadFiles();
-
-  // Start processing
   const pdf = await getPdfById(id);
   if (pdf && pdf.blob) {
     await updatePdfStatus(id, FileStatus.PROCESSING);
     await loadFiles();
-
-    pdfWorker.postMessage({
-      type: "extract",
-      pdfId: id,
-      pdfData: pdf.blob,
-    });
+    pdfWorker.postMessage({ type: "extract", pdfId: id, pdfData: pdf.blob });
   }
 }
 
@@ -132,15 +121,12 @@ async function handleExtract(config) {
   currentConfig.value = config;
 
   try {
-    // Get all extracted text from ready PDFs
     const textContent = await getAllExtractedText();
-
     if (Object.keys(textContent).length === 0) {
       console.warn("No text content available");
       return;
     }
 
-    // Call backend for preview
     const payload = {
       filenames: Object.keys(textContent),
       keyword_regex: config.keywordRegex,
@@ -152,7 +138,6 @@ async function handleExtract(config) {
     matches.value = result.matches;
     totalCount.value = result.total_count;
 
-    // Fetch all matches for export
     if (result.total_count > 10) {
       const allResult = await extractAllMatches(payload);
       allMatches.value = allResult.matches;
@@ -161,9 +146,7 @@ async function handleExtract(config) {
     }
   } catch (error) {
     console.error("Extraction error:", error);
-    alert(
-      "Extraction failed: " + (error.response?.data?.detail || error.message),
-    );
+    alert("Extraction failed: " + (error.response?.data?.detail || error.message));
   } finally {
     isExtracting.value = false;
   }
@@ -171,9 +154,7 @@ async function handleExtract(config) {
 
 async function handleExport() {
   if (!canExport.value) return;
-
   isExporting.value = true;
-
   try {
     await exportExcel(allMatches.value, true);
   } catch (error) {
@@ -187,36 +168,27 @@ async function handleExport() {
 function handleLicenseResult(valid) {
   if (!valid) {
     console.error("License validation failed - app functionality may be limited");
-    // App content is hidden by LicenseCheck component when invalid
   } else {
-    // License validated successfully - now check backend status with retries
-    // The sidecar should be ready by now after license validation
     checkBackendStatusWithRetry();
   }
 }
 
-/**
- * Check backend status with retry logic.
- * The Python sidecar takes time to start up, so we retry a few times.
- */
 async function checkBackendStatusWithRetry() {
   const maxRetries = 8;
-  const retryDelay = 500; // ms
+  const retryDelay = 500;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const result = await checkHealth();
       console.log("Backend health:", result);
       backendStatus.value = "online";
-      return; // Success - exit retry loop
+      return;
     } catch (error) {
       console.log(`Backend check attempt ${attempt}/${maxRetries} failed:`, error.message);
       if (attempt >= maxRetries) {
-        // All retries exhausted
         console.error("Backend offline after all retries:", error.response?.status, error.code);
         backendStatus.value = "offline";
       } else {
-        // Wait before next retry
         await new Promise(resolve => setTimeout(resolve, retryDelay));
       }
     }
@@ -227,90 +199,132 @@ async function checkBackendStatusWithRetry() {
 <template>
   <LicenseCheck @validated="handleLicenseResult">
     <div class="app-layout">
+
       <!-- Header -->
       <header class="main-header">
-      <div class="container mx-auto flex items-center justify-between px-6">
-        <div class="flex items-center gap-4">
-          <div class="logo-container">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <div>
-            <h1 class="app-title">TextHunter</h1>
-            <div class="status-indicator">
-              <div :class="['status-dot', backendStatus === 'online' ? 'status-online' : 'status-offline']"></div>
-              <span class="text-[10px] font-bold uppercase tracking-widest">
-                {{ backendStatus === 'online' ? 'API Online' : 'API Offline' }}
-              </span>
+        <div class="container mx-auto flex items-center justify-between px-6">
+          <div class="flex items-center gap-4">
+            <div class="logo-container">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="app-title">PDFHunter</h1>
+              <div class="status-indicator">
+                <div :class="['status-dot', backendStatus === 'online' ? 'status-online' : 'status-offline']"></div>
+                <span class="text-[10px] font-bold uppercase tracking-widest">
+                  {{ backendStatus === 'online' ? 'API Online' : 'API Offline' }}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="flex items-center gap-4">
-          <a href="/docs/" target="_blank" class="btn-docs" title="Open Documentation">
-            <span class="flex items-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-              Docs
-            </span>
-          </a>
-          <button v-if="allMatches.length > 0" class="btn-export" :disabled="isExporting" @click="handleExport">
-            <span class="flex items-center gap-2">
-              <svg v-if="isExporting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                </path>
-              </svg>
-              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              {{ isExporting ? 'Exporting...' : 'Export to Excel' }}
-            </span>
+          <div class="flex items-center gap-4">
+            <a href="/docs/" target="_blank" class="btn-docs" title="Open Documentation">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Docs
+              </span>
+            </a>
+            <!-- Export button (text tab only) -->
+            <button
+              v-if="activeTab === 'text' && allMatches.length > 0"
+              class="btn-export"
+              :disabled="isExporting"
+              @click="handleExport"
+            >
+              <span class="flex items-center gap-2">
+                <svg v-if="isExporting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                  </path>
+                </svg>
+                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {{ isExporting ? 'Exporting...' : 'Export to Excel' }}
+              </span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Tab navigation -->
+      <nav class="tab-nav">
+        <div class="container mx-auto px-6 flex gap-1">
+          <button
+            :class="['tab-btn', activeTab === 'text' ? 'tab-active' : 'tab-inactive']"
+            @click="activeTab = 'text'"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Text Extraction
+          </button>
+          <button
+            :class="['tab-btn', activeTab === 'vision' ? 'tab-active' : 'tab-inactive']"
+            @click="activeTab = 'vision'"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            Symbol Detection
+            <span class="tab-badge">NEW</span>
           </button>
         </div>
-      </div>
-    </header>
+      </nav>
 
-    <!-- Main Content -->
-    <main class="container mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 px-6 py-8">
-      <!-- Left Column: Controls -->
-      <aside class="lg:col-span-3 space-y-6">
-        <section>
-          <FileUpload :disabled="backendStatus === 'offline'" @file-added="handleFileAdded" />
-        </section>
+      <!-- Main Content -->
+      <main class="container mx-auto flex-1 px-6 py-8">
 
-        <section>
-          <FileList :files="files" :is-loading="isLoadingFiles" @delete-file="handleDeleteFile" />
-        </section>
-      </aside>
+        <!-- Text Extraction Tab -->
+        <div v-show="activeTab === 'text'" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <!-- Left Column: Controls -->
+          <aside class="lg:col-span-3 space-y-6">
+            <section>
+              <FileUpload :disabled="backendStatus === 'offline'" @file-added="handleFileAdded" />
+            </section>
+            <section>
+              <FileList :files="files" :is-loading="isLoadingFiles" @delete-file="handleDeleteFile" />
+            </section>
+          </aside>
 
-      <!-- Right Column: Results -->
-      <section class="lg:col-span-8 space-y-8">
-        <section>
-          <RegexConfig :disabled="!hasReadyFiles" @extract="handleExtract" />
-        </section>
-        <ResultsTable :matches="matches" :total-count="totalCount" :is-loading="isExtracting" />
-      </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="main-footer">
-      <div class="container mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="flex flex-col gap-2">
-          <p class="copyright">
-            &copy; {{ new Date().getFullYear() }} TextHunter. All rights reserved.
-          </p>
-          <p class="text-xs text-slate-600">Built for high-performance PDF data extraction</p>
+          <!-- Right Column: Results -->
+          <section class="lg:col-span-9 space-y-8">
+            <RegexConfig :disabled="!hasReadyFiles" @extract="handleExtract" />
+            <ResultsTable :matches="matches" :total-count="totalCount" :is-loading="isExtracting" />
+          </section>
         </div>
-      </div>
-    </footer>
-  </div>
+
+        <!-- Symbol Detection Tab -->
+        <div v-show="activeTab === 'vision'">
+          <SymbolDetector />
+        </div>
+
+      </main>
+
+      <!-- Footer -->
+      <footer class="main-footer">
+        <div class="container mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="flex flex-col gap-2">
+            <p class="copyright">&copy; {{ new Date().getFullYear() }} PDFHunter. All rights reserved.</p>
+            <p class="text-xs text-slate-600">Text extraction · P&amp;ID symbol detection · Oil &amp; Gas</p>
+          </div>
+        </div>
+      </footer>
+
+    </div>
   </LicenseCheck>
 </template>
 
@@ -349,6 +363,28 @@ async function checkBackendStatusWithRetry() {
 .status-offline {
   @apply bg-red-500;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+/* Tab navigation */
+.tab-nav {
+  @apply border-b border-white/5 bg-slate-900/30;
+}
+
+.tab-btn {
+  @apply inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all relative;
+}
+
+.tab-active {
+  @apply text-white border-b-2 border-indigo-500;
+}
+
+.tab-inactive {
+  @apply text-slate-500 hover:text-slate-300;
+}
+
+.tab-badge {
+  @apply inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider
+         bg-indigo-600/70 text-indigo-200 leading-none;
 }
 
 .btn-docs {

@@ -8,7 +8,10 @@
     "shell:allow-spawn",
     "shell:allow-stdin-write",
     "shell:default",
+    "shell:allow-open",
     "http:default",
+    "fs:default",
+    "fs:allow-write-text-file",
     {
       "identifier": "http:default",
       "allow": [
@@ -17,6 +20,14 @@
         },
         {
           "url": "http://127.0.0.1:*"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:default",
+      "allow": [
+        {
+          "path": "$DOWNLOAD/*"
         }
       ]
     }

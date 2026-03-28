@@ -68,7 +68,9 @@ async def root() -> dict[str, str]:
     }
 
 
-from texthunter.license import validate_license, clear_license
+import asyncio
+
+from texthunter.license import validate_license
 
 @app.get("/v1/connect")
 async def connect() -> dict:
@@ -85,22 +87,12 @@ async def connect() -> dict:
 
 @app.get("/v1/license/check")
 async def check_license() -> dict:
-    """Check and validate license against GitHub releases.
+    """Check local version against the external API.
 
     Returns:
-        dict with license validation status
+        dict with version validation status
     """
-    return validate_license()
-
-
-@app.get("/v1/license/clear")
-async def clear_license_endpoint() -> dict:
-    """Clear cached license (for testing).
-
-    Returns:
-        dict with status message
-    """
-    return clear_license()
+    return await asyncio.to_thread(validate_license)
 
 
 def kill_process():

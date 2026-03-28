@@ -44,22 +44,17 @@ export async function guessRegex(
  * Export matches to Excel file.
  * @param matches - List of match results
  * @param includeContext - Whether to include context column
+ * @returns File path if desktop (saved to Downloads), null if web (browser download)
  */
 export async function exportExcel(
   matches: Schemas["MatchResult"][],
   includeContext = true,
-): Promise<void> {
+): Promise<string | null> {
   const { blob, filename } = await httpClient.postBlob("/export", { matches, include_context: includeContext });
 
-  // Trigger download
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
+  // Use desktop/web export utility
+  const { exportExcelFile } = await import("@/utils/export.ts");
+  return exportExcelFile(blob, filename);
 }
 
 /**

@@ -12,21 +12,27 @@
 
 ```typescript
 // frontend/src/api/client.ts
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
+// Use dynamic import to avoid errors in web mode where plugin doesn't exist
 
-// Detect Tauri environment
 const isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
 
-// Use appropriate fetch based on environment
-const httpFetch = isTauri ? tauriFetch : window.fetch;
+async function httpFetch(url: string, options?: RequestInit): Promise<Response> {
+  if (isTauri) {
+    const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+    return tauriFetch(url, options);
+  }
+  return window.fetch(url, options);
+}
 
 // Use httpFetch for all HTTP calls
 const response = await httpFetch(url, { ... });
 ```
 
+**Note:** Dynamic import is used instead of static import to prevent build errors in web mode where `@tauri-apps/plugin-http` may not be available.
+
 #### Required Setup:
 
-1. **Install the plugin** (already in package.json):
+1. **Install the plugin in frontend** (`frontend/package.json`):
 ```json
 {
   "dependencies": {
@@ -34,6 +40,7 @@ const response = await httpFetch(url, { ... });
   }
 }
 ```
+Run: `cd frontend && npm install @tauri-apps/plugin-http`
 
 2. **Add Rust dependency** (`src-tauri/Cargo.toml`):
 ```toml
@@ -376,10 +383,16 @@ fn main() {
 
 **`frontend/src/api/client.ts`:**
 ```typescript
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
-
+// Dynamic import to work in both Tauri and web modes
 const isTauri = !!window.__TAURI_INTERNALS__;
-const httpFetch = isTauri ? tauriFetch : window.fetch;
+
+async function httpFetch(url: string, options?: RequestInit): Promise<Response> {
+  if (isTauri) {
+    const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+    return tauriFetch(url, options);
+  }
+  return window.fetch(url, options);
+}
 
 // Must use httpFetch, NOT raw fetch
 const response = await httpFetch(url, options);
@@ -414,6 +427,7 @@ npm run tauri dev
 - Wrong plugin config format in `tauri.conf.json` (doesn't apply to HTTP plugin)
 - Not checking console error first
 - Not verifying all 3 pieces: Rust plugin + Capabilities + TypeScript usage
+- Static import of `@tauri-apps/plugin-http` fails silently in web mode (use dynamic import)
 
 ---
 
@@ -426,9 +440,14 @@ const isTauri = !!window.__TAURI_INTERNALS__;
 
 ### HTTP Client Pattern
 ```typescript
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
-const httpFetch = isTauri ? tauriFetch : window.fetch;
-await httpFetch(url, options);
+// Dynamic import for Tauri/web compatibility
+async function httpFetch(url: string, options?: RequestInit): Promise<Response> {
+  if (window.__TAURI_INTERNALS__) {
+    const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+    return tauriFetch(url, options);
+  }
+  return window.fetch(url, options);
+}
 ```
 
 ### Required Files for HTTP Plugin

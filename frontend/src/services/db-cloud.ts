@@ -1,10 +1,14 @@
 /**
- * Cloud DB service — Supabase persistence for web mode.
+ * Unified persistent storage service for TextHunter.
  *
- * All functions silently no-op on desktop (Tauri), where
- * local IndexedDB (Dexie) is the sole storage layer.
+ * Transparent routing based on runtime environment:
+ *   Desktop (Tauri) → SQLite  via @tauri-apps/plugin-sql
+ *   Web             → Supabase PostgreSQL
  *
- * Tables (Supabase):
+ * All exported functions have identical signatures in both modes.
+ * Callers never need to know which backend is active.
+ *
+ * Tables:
  *   texthunter_extractions — saved extraction runs
  *   texthunter_configs     — saved regex configurations
  */
@@ -14,7 +18,7 @@ import { supabase, isTauri } from "@/lib/supabase";
 // Types
 // ---------------------------------------------------------------------------
 
-export interface CloudExtraction {
+export interface Extraction {
   id?: string;
   name?: string;
   keyword_regex: string;
@@ -25,7 +29,7 @@ export interface CloudExtraction {
   created_at?: string;
 }
 
-export interface CloudConfig {
+export interface Config {
   id?: string;
   name: string;
   keyword_regex: string;
@@ -34,15 +38,80 @@ export interface CloudConfig {
 }
 
 // ---------------------------------------------------------------------------
+// SQLite initialisation (desktop only)
+// ---------------------------------------------------------------------------
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _dbPromise: Promise<any> | null = null;
+
+async function getDb() {
+  if (!isTauri) return null;
+  if (!_dbPromise) {
+    _dbPromise = (async () => {
+      const { default: Database } = await import("@tauri-apps/plugin-sql");
+      const db = await Database.load("sqlite:texthunter.db");
+
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS texthunter_extractions (
+          id                    TEXT PRIMARY KEY,
+          name                  TEXT,
+          keyword_regex         TEXT NOT NULL,
+          file_identifier_regex TEXT,
+          file_count            INTEGER NOT NULL DEFAULT 0,
+          match_count           INTEGER NOT NULL DEFAULT 0,
+          results               TEXT NOT NULL DEFAULT '[]',
+          created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS texthunter_configs (
+          id                    TEXT PRIMARY KEY,
+          name                  TEXT NOT NULL UNIQUE,
+          keyword_regex         TEXT NOT NULL,
+          file_identifier_regex TEXT,
+          created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+
+      return db;
+    })();
+  }
+  return _dbPromise;
+}
+
+// ---------------------------------------------------------------------------
 // Extractions
 // ---------------------------------------------------------------------------
 
-/** Save an extraction run to the cloud. No-op on desktop. */
+/** Save an extraction run. Routes to SQLite (desktop) or Supabase (web). */
 export async function saveExtraction(
-  data: Omit<CloudExtraction, "id" | "created_at">,
+  data: Omit<Extraction, "id" | "created_at">,
 ): Promise<string | null> {
-  if (isTauri || !supabase) return null;
+  // --- Desktop: SQLite ---
+  if (isTauri) {
+    const db = await getDb();
+    if (!db) return null;
+    const id = crypto.randomUUID();
+    await db.execute(
+      `INSERT INTO texthunter_extractions
+         (id, name, keyword_regex, file_identifier_regex, file_count, match_count, results)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        id,
+        data.name ?? null,
+        data.keyword_regex,
+        data.file_identifier_regex ?? null,
+        data.file_count,
+        data.match_count,
+        JSON.stringify(data.results),
+      ],
+    );
+    return id;
+  }
 
+  // --- Web: Supabase ---
+  if (!supabase) return null;
   const { data: row, error } = await supabase
     .from("texthunter_extractions")
     .insert(data)
@@ -56,13 +125,28 @@ export async function saveExtraction(
   return row.id as string;
 }
 
-/** Load the user's extraction history. Returns [] on desktop. */
-export async function getExtractions(): Promise<CloudExtraction[]> {
-  if (isTauri || !supabase) return [];
+/** Load extraction history (last 50). */
+export async function getExtractions(): Promise<Extraction[]> {
+  // --- Desktop: SQLite ---
+  if (isTauri) {
+    const db = await getDb();
+    if (!db) return [];
+    const rows = await db.select<Extraction[]>(
+      `SELECT id, name, keyword_regex, file_identifier_regex,
+              file_count, match_count, created_at
+       FROM texthunter_extractions
+       ORDER BY created_at DESC LIMIT 50`,
+    );
+    return rows;
+  }
 
+  // --- Web: Supabase ---
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("texthunter_extractions")
-    .select("id, name, keyword_regex, file_identifier_regex, file_count, match_count, created_at")
+    .select(
+      "id, name, keyword_regex, file_identifier_regex, file_count, match_count, created_at",
+    )
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -70,15 +154,32 @@ export async function getExtractions(): Promise<CloudExtraction[]> {
     console.error("getExtractions error:", error.message);
     return [];
   }
-  return data as CloudExtraction[];
+  return data as Extraction[];
 }
 
 /** Load a single extraction's full results by id. */
 export async function getExtractionById(
   id: string,
-): Promise<CloudExtraction | null> {
-  if (isTauri || !supabase) return null;
+): Promise<Extraction | null> {
+  // --- Desktop: SQLite ---
+  if (isTauri) {
+    const db = await getDb();
+    if (!db) return null;
+    const rows = await db.select<Extraction[]>(
+      `SELECT * FROM texthunter_extractions WHERE id = $1`,
+      [id],
+    );
+    if (!rows.length) return null;
+    const row = rows[0];
+    // Parse results JSON string back to array
+    return {
+      ...row,
+      results: typeof row.results === "string" ? JSON.parse(row.results) : row.results,
+    };
+  }
 
+  // --- Web: Supabase ---
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from("texthunter_extractions")
     .select("*")
@@ -89,13 +190,24 @@ export async function getExtractionById(
     console.error("getExtractionById error:", error.message);
     return null;
   }
-  return data as CloudExtraction;
+  return data as Extraction;
 }
 
-/** Delete an extraction run. */
+/** Delete an extraction run by id. */
 export async function deleteExtraction(id: string): Promise<void> {
-  if (isTauri || !supabase) return;
+  // --- Desktop: SQLite ---
+  if (isTauri) {
+    const db = await getDb();
+    if (!db) return;
+    await db.execute(
+      `DELETE FROM texthunter_extractions WHERE id = $1`,
+      [id],
+    );
+    return;
+  }
 
+  // --- Web: Supabase ---
+  if (!supabase) return;
   const { error } = await supabase
     .from("texthunter_extractions")
     .delete()
@@ -108,12 +220,39 @@ export async function deleteExtraction(id: string): Promise<void> {
 // Configs
 // ---------------------------------------------------------------------------
 
-/** Save or update a named regex config. No-op on desktop. */
+/** Save or update a named regex config (upsert by name). */
 export async function saveConfig(
-  data: Omit<CloudConfig, "id" | "created_at">,
+  data: Omit<Config, "id" | "created_at">,
 ): Promise<string | null> {
-  if (isTauri || !supabase) return null;
+  // --- Desktop: SQLite ---
+  if (isTauri) {
+    const db = await getDb();
+    if (!db) return null;
+    // Check if name already exists to return its id; otherwise insert new
+    const existing = await db.select<{ id: string }[]>(
+      `SELECT id FROM texthunter_configs WHERE name = $1`,
+      [data.name],
+    );
+    if (existing.length) {
+      await db.execute(
+        `UPDATE texthunter_configs
+         SET keyword_regex = $1, file_identifier_regex = $2
+         WHERE name = $3`,
+        [data.keyword_regex, data.file_identifier_regex ?? null, data.name],
+      );
+      return existing[0].id;
+    }
+    const id = crypto.randomUUID();
+    await db.execute(
+      `INSERT INTO texthunter_configs (id, name, keyword_regex, file_identifier_regex)
+       VALUES ($1, $2, $3, $4)`,
+      [id, data.name, data.keyword_regex, data.file_identifier_regex ?? null],
+    );
+    return id;
+  }
 
+  // --- Web: Supabase ---
+  if (!supabase) return null;
   const { data: row, error } = await supabase
     .from("texthunter_configs")
     .upsert(data, { onConflict: "user_id,name" })
@@ -127,10 +266,22 @@ export async function saveConfig(
   return row.id as string;
 }
 
-/** Load all saved configs for the current user. Returns [] on desktop. */
-export async function getConfigs(): Promise<CloudConfig[]> {
-  if (isTauri || !supabase) return [];
+/** Load all saved configs. */
+export async function getConfigs(): Promise<Config[]> {
+  // --- Desktop: SQLite ---
+  if (isTauri) {
+    const db = await getDb();
+    if (!db) return [];
+    const rows = await db.select<Config[]>(
+      `SELECT id, name, keyword_regex, file_identifier_regex, created_at
+       FROM texthunter_configs
+       ORDER BY name`,
+    );
+    return rows;
+  }
 
+  // --- Web: Supabase ---
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("texthunter_configs")
     .select("id, name, keyword_regex, file_identifier_regex, created_at")
@@ -140,13 +291,21 @@ export async function getConfigs(): Promise<CloudConfig[]> {
     console.error("getConfigs error:", error.message);
     return [];
   }
-  return data as CloudConfig[];
+  return data as Config[];
 }
 
 /** Delete a saved config by id. */
 export async function deleteConfig(id: string): Promise<void> {
-  if (isTauri || !supabase) return;
+  // --- Desktop: SQLite ---
+  if (isTauri) {
+    const db = await getDb();
+    if (!db) return;
+    await db.execute(`DELETE FROM texthunter_configs WHERE id = $1`, [id]);
+    return;
+  }
 
+  // --- Web: Supabase ---
+  if (!supabase) return;
   const { error } = await supabase
     .from("texthunter_configs")
     .delete()

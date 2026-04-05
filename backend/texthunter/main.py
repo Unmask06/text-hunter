@@ -76,6 +76,7 @@ async def root() -> dict[str, str]:
 
 from texthunter.license import clear_license, validate_license
 
+
 @app.get("/v1/connect")
 async def connect() -> dict:
     """Connection endpoint for Tauri sidecar."""
@@ -95,6 +96,7 @@ async def check_license() -> dict:
 
     Returns:
         dict with version validation status
+
     """
     return await asyncio.to_thread(validate_license)
 
@@ -105,6 +107,7 @@ async def clear_license_endpoint() -> dict:
 
     Returns:
         dict with status message
+
     """
     return clear_license()
 

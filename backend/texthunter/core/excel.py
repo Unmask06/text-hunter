@@ -109,6 +109,7 @@ def generate_vision_excel(results: list[SymbolDetectionResult]) -> BytesIO:
 
     Returns:
         BytesIO buffer containing the Excel file.
+
     """
     data = [
         {

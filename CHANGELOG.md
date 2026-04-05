@@ -16,11 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - LicenseCheck Vue component for validation UI
 - Environment variable support for GitHub PAT (`GITHUB_PAT`)
 
+### Changed
+- **Storage architecture**: Removed `texthunter_extractions` table, configs now stored in `texthunter_configs` with `user_id` and `modified` timestamp
+- **Desktop storage path**: Changed from `~/.texthunter/` to `%LOCALAPPDATA%\XergiZ\TextHunter\` on Windows
+- **Frontend-backend sync**: Config presets now sync between IndexedDB (local cache) and backend (SQLite/Supabase)
+- **Vision module refactored**: Split `core/vision.py` into package with `opencv.py` (primitives) and `operations.py` (PDF rendering + text association)
+- **API routes**: Renamed `api/history_routes.py` to `api/configs.py` for clarity
+
 ### Technical
 - New module: `backend/texthunter/license.py` for license logic
 - New service: `frontend/src/services/license.ts` for API client
 - New component: `frontend/src/components/LicenseCheck.vue` for UI
 - Added `requests` and `tomli` dependencies to backend
+- Added SQL migration system (`backend/migrations/*.sql`) with auto-apply on startup
+- Fixed Ruff errors in modified files (missing docstrings, line length, zip strict mode)
+- Documentation cleanup: removed stale `DESKTOP-IMPLEMENTATION.md`, `DEVELOPMENT.md`, `.github/copilot-instructions.md`
+
+---
 
 ## [0.7.0] - 2026-03-21
 

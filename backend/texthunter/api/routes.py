@@ -7,7 +7,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from texthunter.api.history_routes import history_router
+from texthunter.api.configs import configs_router
 from texthunter.api.schemas import (
     BoundingBox,
     ExportRequest,
@@ -19,9 +19,9 @@ from texthunter.api.schemas import (
     RegexGuessResponse,
     RenderPageRequest,
     RenderPageResponse,
+    SymbolDetectionResult,
     SymbolDetectRequest,
     SymbolDetectResponse,
-    SymbolDetectionResult,
     SymbolTemplate,
     VisionExportRequest,
 )
@@ -41,7 +41,7 @@ from texthunter.core.vision import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-router.include_router(history_router, prefix="/v1/history")
+router.include_router(configs_router, prefix="/v1/history")
 
 
 @router.get("/health")
@@ -184,19 +184,26 @@ async def render_pdf_page(payload: RenderPageRequest):
 
     try:
         pdf_bytes = __import__("base64").b64decode(payload.pdf_b64)
-        pages = render_pdf_pages(pdf_bytes, dpi=payload.dpi, page_numbers=[payload.page])
+        pages = render_pdf_pages(
+            pdf_bytes, dpi=payload.dpi, page_numbers=[payload.page]
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"PDF render failed: {e}") from e
 
     if not pages:
-        raise HTTPException(status_code=400, detail=f"Page {payload.page} not found in PDF")
+        raise HTTPException(
+            status_code=400, detail=f"Page {payload.page} not found in PDF"
+        )
 
     page_no, img = pages[0]
     h, w = img.shape[:2]
 
     # Determine total page count
     import fitz as _fitz
-    with _fitz.open(stream=__import__("base64").b64decode(payload.pdf_b64), filetype="pdf") as doc:
+
+    with _fitz.open(
+        stream=__import__("base64").b64decode(payload.pdf_b64), filetype="pdf"
+    ) as doc:
         total = doc.page_count
 
     return RenderPageResponse(
@@ -215,7 +222,9 @@ async def extract_legend(payload: LegendExtractRequest):
     If bounding_boxes is provided, crops those regions.
     Otherwise, runs automatic contour-based segmentation.
     """
-    logger.info("Vision extract-legend: manual_boxes=%s", payload.bounding_boxes is not None)
+    logger.info(
+        "Vision extract-legend: manual_boxes=%s", payload.bounding_boxes is not None
+    )
 
     try:
         image = base64_to_image(payload.image_b64)
@@ -229,29 +238,47 @@ async def extract_legend(payload: LegendExtractRequest):
 
     if payload.bounding_boxes:
         boxes = [(b.x, b.y, b.width, b.height) for b in payload.bounding_boxes]
-        names = payload.symbol_names or [f"Symbol {i+1}" for i in range(len(boxes))]
+        names = payload.symbol_names or [f"Symbol {i + 1}" for i in range(len(boxes))]
         crops = extract_legend_templates(image, boxes)
 
         for i, (crop, name) in enumerate(zip(crops, names)):
             b = payload.bounding_boxes[i]
-            _cv2.rectangle(annotated, (b.x, b.y), (b.x + b.width, b.y + b.height), (0, 255, 0), 2)
-            _cv2.putText(
-                annotated, name, (b.x, max(b.y - 4, 14)),
-                _cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 0), 1, _cv2.LINE_AA,
+            _cv2.rectangle(
+                annotated, (b.x, b.y), (b.x + b.width, b.y + b.height), (0, 255, 0), 2
             )
-            templates.append(SymbolTemplate(name=name, image_b64=image_to_base64_png(crop)))
+            _cv2.putText(
+                annotated,
+                name,
+                (b.x, max(b.y - 4, 14)),
+                _cv2.FONT_HERSHEY_SIMPLEX,
+                0.45,
+                (0, 255, 0),
+                1,
+                _cv2.LINE_AA,
+            )
+            templates.append(
+                SymbolTemplate(name=name, image_b64=image_to_base64_png(crop))
+            )
     else:
         segments = auto_segment_legend_grid(image)
         logger.info("Auto-segmented %d candidate symbols", len(segments))
 
         for i, ((x, y, w, h), crop) in enumerate(segments):
-            name = f"Symbol {i+1}"
+            name = f"Symbol {i + 1}"
             _cv2.rectangle(annotated, (x, y), (x + w, y + h), (255, 128, 0), 2)
             _cv2.putText(
-                annotated, name, (x, max(y - 4, 14)),
-                _cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 128, 0), 1, _cv2.LINE_AA,
+                annotated,
+                name,
+                (x, max(y - 4, 14)),
+                _cv2.FONT_HERSHEY_SIMPLEX,
+                0.45,
+                (255, 128, 0),
+                1,
+                _cv2.LINE_AA,
             )
-            templates.append(SymbolTemplate(name=name, image_b64=image_to_base64_png(crop)))
+            templates.append(
+                SymbolTemplate(name=name, image_b64=image_to_base64_png(crop))
+            )
 
     return LegendExtractResponse(
         templates=templates,
@@ -320,7 +347,9 @@ async def detect_symbols(payload: SymbolDetectRequest):
         text_for_page = page_texts.get(page_no, "")
         for m in page_matches:
             if text_for_page:
-                m.associated_tags = find_nearby_text(m, text_for_page, payload.nearby_text_radius_px)
+                m.associated_tags = find_nearby_text(
+                    m, text_for_page, payload.nearby_text_radius_px
+                )
 
             all_results.append(
                 SymbolDetectionResult(
@@ -369,4 +398,3 @@ async def export_vision_excel(payload: VisionExportRequest):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
-

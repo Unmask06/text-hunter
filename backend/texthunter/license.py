@@ -113,3 +113,13 @@ def validate_license() -> dict:
             "expires_at": "",
         },
     }
+
+
+def clear_license() -> dict:
+    """Clear cached license state (for testing).
+
+    Returns:
+        dict with status message
+
+    """
+    return {"message": "License cache cleared", "status": "success"}

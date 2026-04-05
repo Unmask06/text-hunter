@@ -1,5 +1,4 @@
-"""
-Unified history storage for TextHunter.
+"""Unified config storage for TextHunter.
 
 Selects backend at startup based on environment:
   - SUPABASE_SERVICE_KEY set  →  SupabaseStorage (web deployment)
@@ -10,7 +9,6 @@ Both classes expose the same async interface so routes are backend-agnostic.
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import uuid
@@ -20,118 +18,105 @@ import aiosqlite
 
 logger = logging.getLogger(__name__)
 
-# Reuse existing app-data directory (same location as license.json)
-DB_PATH = Path.home() / ".texthunter" / "texthunter.db"
 
-# ---------------------------------------------------------------------------
-# SQLite backend
-# ---------------------------------------------------------------------------
+def _get_db_path() -> Path:
+    r"""Return the SQLite DB path.
+
+    Desktop: %LOCALAPPDATA%\XergiZ\TextHunter\texthunter.db
+    Fallback (non-Windows or missing env): ~/.texthunter/texthunter.db
+    """
+    local_appdata = os.environ.get("LOCALAPPDATA")
+    if local_appdata:
+        return Path(local_appdata) / "XergiZ" / "TextHunter" / "texthunter.db"
+    return Path.home() / ".texthunter" / "texthunter.db"
+
+
+DB_PATH = _get_db_path()
+MIGRATIONS_DIR = Path(__file__).parent.parent.parent / "migrations"
+
 
 class SQLiteStorage:
     """Local SQLite storage — used by the desktop sidecar."""
 
     def __init__(self, db_path: Path = DB_PATH) -> None:
+        """Initialize with path to SQLite database file."""
         self._db_path = db_path
 
     async def init(self) -> None:
-        """Create tables if they don't exist."""
+        """Create tables and apply migrations."""
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute("""
-                CREATE TABLE IF NOT EXISTS texthunter_extractions (
+                CREATE TABLE IF NOT EXISTS texthunter_configs (
                     id                    TEXT PRIMARY KEY,
-                    name                  TEXT,
+                    user_id               TEXT,
+                    name                  TEXT NOT NULL,
                     keyword_regex         TEXT NOT NULL,
                     file_identifier_regex TEXT,
-                    file_count            INTEGER NOT NULL DEFAULT 0,
-                    match_count           INTEGER NOT NULL DEFAULT 0,
-                    results               TEXT NOT NULL DEFAULT '[]',
-                    created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+                    created_at            TEXT NOT NULL DEFAULT (datetime('now')),
+                    modified              TEXT NOT NULL DEFAULT (datetime('now')),
+                    UNIQUE(user_id, name)
                 )
             """)
             await db.execute("""
-                CREATE TABLE IF NOT EXISTS texthunter_configs (
-                    id                    TEXT PRIMARY KEY,
-                    name                  TEXT NOT NULL UNIQUE,
-                    keyword_regex         TEXT NOT NULL,
-                    file_identifier_regex TEXT,
-                    created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+                CREATE TABLE IF NOT EXISTS _migrations (
+                    filename TEXT PRIMARY KEY,
+                    applied_at TEXT NOT NULL DEFAULT (datetime('now'))
                 )
             """)
             await db.commit()
+        await self._apply_migrations()
         logger.info("SQLite DB initialised at %s", self._db_path)
 
-    # --- Extractions ---
+    async def _apply_migrations(self) -> None:
+        """Apply SQL migrations from migrations/ directory."""
+        if not MIGRATIONS_DIR.exists():
+            return
 
-    async def save_extraction(self, data: dict, user_id: str | None = None) -> str:
-        new_id = str(uuid.uuid4())
-        async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(
-                """INSERT INTO texthunter_extractions
-                   (id, name, keyword_regex, file_identifier_regex,
-                    file_count, match_count, results)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (
-                    new_id,
-                    data.get("name"),
-                    data["keyword_regex"],
-                    data.get("file_identifier_regex"),
-                    data.get("file_count", 0),
-                    data.get("match_count", 0),
-                    json.dumps(data.get("results", [])),
-                ),
-            )
-            await db.commit()
-        return new_id
-
-    async def get_extractions(self, user_id: str | None = None) -> list[dict]:
+        sql_files = sorted(MIGRATIONS_DIR.glob("*.sql"))
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            async with db.execute(
-                """SELECT id, name, keyword_regex, file_identifier_regex,
-                          file_count, match_count, created_at
-                   FROM texthunter_extractions
-                   ORDER BY created_at DESC LIMIT 50"""
-            ) as cursor:
-                rows = await cursor.fetchall()
-        return [dict(r) for r in rows]
+            for sql_file in sql_files:
+                async with db.execute(
+                    "SELECT 1 FROM _migrations WHERE filename = ?", (sql_file.name,)
+                ) as cursor:
+                    if await cursor.fetchone():
+                        logger.debug(
+                            "Migration %s already applied, skipping", sql_file.name
+                        )
+                        continue
 
-    async def get_extraction_by_id(self, extraction_id: str, user_id: str | None = None) -> dict | None:
-        async with aiosqlite.connect(self._db_path) as db:
-            db.row_factory = aiosqlite.Row
-            async with db.execute(
-                "SELECT * FROM texthunter_extractions WHERE id = ?", (extraction_id,)
-            ) as cursor:
-                row = await cursor.fetchone()
-        if row is None:
-            return None
-        result = dict(row)
-        result["results"] = json.loads(result["results"])
-        return result
-
-    async def delete_extraction(self, extraction_id: str, user_id: str | None = None) -> None:
-        async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(
-                "DELETE FROM texthunter_extractions WHERE id = ?", (extraction_id,)
-            )
-            await db.commit()
-
-    # --- Configs ---
+                logger.info("Applying migration %s", sql_file.name)
+                with open(sql_file, "r") as f:
+                    sql = f.read()
+                await db.executescript(sql)
+                await db.execute(
+                    "INSERT INTO _migrations (filename) VALUES (?)", (sql_file.name,)
+                )
+                await db.commit()
 
     async def save_config(self, data: dict, user_id: str | None = None) -> str:
+        """Save or update a config. Upserts by (user_id, name)."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            async with db.execute(
-                "SELECT id FROM texthunter_configs WHERE name = ?", (data["name"],)
-            ) as cursor:
+            query = (
+                "SELECT id FROM texthunter_configs "
+                "WHERE name = ? AND (user_id IS ? OR user_id = ?)"
+            )
+            async with db.execute(query, (data["name"], user_id, user_id)) as cursor:
                 existing = await cursor.fetchone()
 
             if existing:
                 await db.execute(
                     """UPDATE texthunter_configs
-                       SET keyword_regex = ?, file_identifier_regex = ?
-                       WHERE name = ?""",
-                    (data["keyword_regex"], data.get("file_identifier_regex"), data["name"]),
+                       SET keyword_regex = ?, file_identifier_regex = ?,
+                           modified = datetime('now')
+                       WHERE id = ?""",
+                    (
+                        data["keyword_regex"],
+                        data.get("file_identifier_regex"),
+                        existing["id"],
+                    ),
                 )
                 await db.commit()
                 return existing["id"]
@@ -139,27 +124,41 @@ class SQLiteStorage:
             new_id = str(uuid.uuid4())
             await db.execute(
                 """INSERT INTO texthunter_configs
-                   (id, name, keyword_regex, file_identifier_regex)
-                   VALUES (?, ?, ?, ?)""",
-                (new_id, data["name"], data["keyword_regex"], data.get("file_identifier_regex")),
+                   (id, user_id, name, keyword_regex, file_identifier_regex)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (
+                    new_id,
+                    user_id,
+                    data["name"],
+                    data["keyword_regex"],
+                    data.get("file_identifier_regex"),
+                ),
             )
             await db.commit()
         return new_id
 
     async def get_configs(self, user_id: str | None = None) -> list[dict]:
+        """List all configs for the given user (or all if user_id is None)."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
             async with db.execute(
-                """SELECT id, name, keyword_regex, file_identifier_regex, created_at
-                   FROM texthunter_configs ORDER BY name"""
+                """SELECT id, name, keyword_regex, file_identifier_regex,
+                          created_at, modified
+                   FROM texthunter_configs
+                   WHERE user_id IS ? OR user_id = ?
+                   ORDER BY name""",
+                (user_id, user_id),
             ) as cursor:
                 rows = await cursor.fetchall()
         return [dict(r) for r in rows]
 
     async def delete_config(self, config_id: str, user_id: str | None = None) -> None:
+        """Delete a config by id, scoped to user_id."""
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(
-                "DELETE FROM texthunter_configs WHERE id = ?", (config_id,)
+                "DELETE FROM texthunter_configs "
+                "WHERE id = ? AND (user_id IS ? OR user_id = ?)",
+                (config_id, user_id, user_id),
             )
             await db.commit()
 
@@ -167,6 +166,7 @@ class SQLiteStorage:
 # ---------------------------------------------------------------------------
 # Supabase backend
 # ---------------------------------------------------------------------------
+
 
 class SupabaseStorage:
     """Server-side Supabase storage — used by the web deployment.
@@ -176,56 +176,17 @@ class SupabaseStorage:
     """
 
     def __init__(self, supabase_url: str, service_key: str) -> None:
-        from supabase import create_client  # imported lazily — not installed on desktop
+        """Initialize Supabase client with URL and service key."""
+        from supabase import create_client
+
         self._client = create_client(supabase_url, service_key)
         logger.info("SupabaseStorage initialised (url=%s)", supabase_url)
 
     async def init(self) -> None:
         """No-op — tables managed via migrations."""
 
-    # --- Extractions ---
-
-    async def save_extraction(self, data: dict, user_id: str | None = None) -> str:
-        payload = {
-            "user_id": user_id,
-            "name": data.get("name"),
-            "keyword_regex": data["keyword_regex"],
-            "file_identifier_regex": data.get("file_identifier_regex"),
-            "file_count": data.get("file_count", 0),
-            "match_count": data.get("match_count", 0),
-            "results": data.get("results", []),
-        }
-        result = self._client.table("texthunter_extractions").insert(payload).execute()
-        return result.data[0]["id"]
-
-    async def get_extractions(self, user_id: str | None = None) -> list[dict]:
-        result = (
-            self._client.table("texthunter_extractions")
-            .select("id,name,keyword_regex,file_identifier_regex,file_count,match_count,created_at")
-            .eq("user_id", user_id)
-            .order("created_at", desc=True)
-            .limit(50)
-            .execute()
-        )
-        return result.data
-
-    async def get_extraction_by_id(self, extraction_id: str, user_id: str | None = None) -> dict | None:
-        result = (
-            self._client.table("texthunter_extractions")
-            .select("*")
-            .eq("id", extraction_id)
-            .eq("user_id", user_id)
-            .single()
-            .execute()
-        )
-        return result.data
-
-    async def delete_extraction(self, extraction_id: str, user_id: str | None = None) -> None:
-        self._client.table("texthunter_extractions").delete().eq("id", extraction_id).eq("user_id", user_id).execute()
-
-    # --- Configs ---
-
     async def save_config(self, data: dict, user_id: str | None = None) -> str:
+        """Save or update a config. Upserts by (user_id, name)."""
         payload = {
             "user_id": user_id,
             "name": data["name"],
@@ -240,9 +201,10 @@ class SupabaseStorage:
         return result.data[0]["id"]
 
     async def get_configs(self, user_id: str | None = None) -> list[dict]:
+        """List all configs for the given user."""
         result = (
             self._client.table("texthunter_configs")
-            .select("id,name,keyword_regex,file_identifier_regex,created_at")
+            .select("id,name,keyword_regex,file_identifier_regex,created_at,modified")
             .eq("user_id", user_id)
             .order("name")
             .execute()
@@ -250,7 +212,10 @@ class SupabaseStorage:
         return result.data
 
     async def delete_config(self, config_id: str, user_id: str | None = None) -> None:
-        self._client.table("texthunter_configs").delete().eq("id", config_id).eq("user_id", user_id).execute()
+        """Delete a config by id, scoped to user_id."""
+        self._client.table("texthunter_configs").delete().eq("id", config_id).eq(
+            "user_id", user_id
+        ).execute()
 
 
 # ---------------------------------------------------------------------------

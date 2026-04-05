@@ -1,14 +1,12 @@
-"""P&ID symbol detection and image processing utilities using OpenCV and PyMuPDF."""
+"""OpenCV image processing primitives for P&ID symbol detection."""
 
 from __future__ import annotations
 
 import base64
 import logging
 from dataclasses import dataclass, field
-from io import BytesIO
 
 import cv2
-import fitz  # PyMuPDF
 import numpy as np
 from PIL import Image
 
@@ -34,50 +32,6 @@ class SymbolMatch:
     scale: float = 1.0
     angle_deg: float = 0.0
     associated_tags: list[str] = field(default_factory=list)
-
-
-# ---------------------------------------------------------------------------
-# PDF rendering
-# ---------------------------------------------------------------------------
-
-
-def render_pdf_pages(
-    pdf_bytes: bytes,
-    dpi: int = 150,
-    page_numbers: list[int] | None = None,
-) -> list[tuple[int, np.ndarray]]:
-    """Render PDF pages to numpy BGR images using PyMuPDF.
-
-    Args:
-        pdf_bytes: Raw PDF file bytes.
-        dpi: Rendering resolution (72–300). 150 gives ~1240×1754 for A4.
-        page_numbers: 1-based page numbers to render. None renders all pages.
-
-    Returns:
-        List of (1-based page number, BGR image array) tuples.
-    """
-    results: list[tuple[int, np.ndarray]] = []
-    zoom = dpi / 72.0
-    matrix = fitz.Matrix(zoom, zoom)
-
-    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
-        total = doc.page_count
-        pages_to_render = page_numbers if page_numbers else list(range(1, total + 1))
-
-        for page_no in pages_to_render:
-            if page_no < 1 or page_no > total:
-                logger.warning("Page %d out of range (1–%d), skipping", page_no, total)
-                continue
-            page = doc[page_no - 1]
-            pix = page.get_pixmap(matrix=matrix, alpha=False)
-            img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
-                pix.height, pix.width, 3
-            )
-            # PyMuPDF returns RGB; convert to BGR for OpenCV
-            bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-            results.append((page_no, bgr))
-
-    return results
 
 
 # ---------------------------------------------------------------------------
@@ -125,6 +79,7 @@ def extract_legend_templates(
 
     Returns:
         List of cropped BGR template images.
+
     """
     templates = []
     h, w = image.shape[:2]
@@ -158,6 +113,7 @@ def auto_segment_legend_grid(
 
     Returns:
         List of ((x, y, w, h), cropped_image) tuples.
+
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # Invert (symbols are typically dark on white)
@@ -220,6 +176,7 @@ def detect_symbol_in_page(
 
     Returns:
         List of SymbolMatch objects sorted by confidence descending.
+
     """
     gray_page = _apply_clahe(cv2.cvtColor(page_image, cv2.COLOR_BGR2GRAY))
     gray_template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
@@ -246,7 +203,9 @@ def detect_symbol_in_page(
                 center = (new_w / 2, new_h / 2)
                 rot_mat = cv2.getRotationMatrix2D(center, angle, 1.0)
                 rotated = cv2.warpAffine(
-                    resized, rot_mat, (new_w, new_h),
+                    resized,
+                    rot_mat,
+                    (new_w, new_h),
                     flags=cv2.INTER_LINEAR,
                     borderMode=cv2.BORDER_REPLICATE,
                 )
@@ -256,7 +215,7 @@ def detect_symbol_in_page(
             result = cv2.matchTemplate(gray_page, rotated, cv2.TM_CCOEFF_NORMED)
             ys, xs = np.where(result >= threshold)
 
-            for x, y in zip(xs, ys):
+            for x, y in zip(xs, ys, strict=True):
                 score = float(result[y, x])
                 raw_matches.append(
                     SymbolMatch(
@@ -287,6 +246,7 @@ def suppress_overlapping_matches(
 
     Returns:
         Filtered list sorted by confidence descending.
+
     """
     if not matches:
         return []
@@ -326,50 +286,12 @@ def _iou(a: SymbolMatch, b: SymbolMatch) -> float:
 
 
 # ---------------------------------------------------------------------------
-# Text association
-# ---------------------------------------------------------------------------
-
-
-def find_nearby_text(
-    match: SymbolMatch,
-    page_text: str,
-    radius_px: int = 80,
-) -> list[str]:
-    """Placeholder: associate P&ID tag strings near a detected symbol.
-
-    When pre-extracted text is available (from the existing PDF worker),
-    this function searches for ISA-format instrument tags (e.g. FT-101,
-    LV-203) in a window of text around the symbol's page position.
-
-    NOTE: Full spatial text association requires per-word bounding box data
-    from PyMuPDF's get_text("words") API. This implementation returns a
-    best-effort tag list by scanning the full page text for tag patterns.
-    A future enhancement should pass word-level bbox data for precise matching.
-
-    Args:
-        match: Detected symbol with (x, y, width, height).
-        page_text: Full page text as a string.
-        radius_px: Unused in text-only mode (reserved for spatial matching).
-
-    Returns:
-        List of unique tag strings found on the same page.
-    """
-    import re
-
-    tag_pattern = re.compile(
-        r"\b[A-Z]{1,4}[-_]?\d{3,5}[A-Z]?\b",
-    )
-    tags = list(set(tag_pattern.findall(page_text)))
-    return tags[:10]  # limit to 10 nearest candidates
-
-
-# ---------------------------------------------------------------------------
 # Annotation
 # ---------------------------------------------------------------------------
 
 # Colour palette per symbol (cycles if more symbols than colours)
 _COLOURS = [
-    (0, 255, 0),    # green
+    (0, 255, 0),  # green
     (255, 128, 0),  # orange
     (0, 128, 255),  # blue
     (255, 0, 255),  # magenta
@@ -392,24 +314,38 @@ def annotate_page_image(
 
     Returns:
         Annotated BGR image copy.
+
     """
     annotated = image.copy()
 
     # Assign a consistent colour per unique symbol name
     unique_names = list(dict.fromkeys(m.symbol_name for m in matches))
-    colour_map = {name: _COLOURS[i % len(_COLOURS)] for i, name in enumerate(unique_names)}
+    colour_map = {
+        name: _COLOURS[i % len(_COLOURS)] for i, name in enumerate(unique_names)
+    }
 
     for m in matches:
         colour = colour_map[m.symbol_name]
-        cv2.rectangle(annotated, (m.x, m.y), (m.x + m.width, m.y + m.height), colour, 2)
+        cv2.rectangle(
+            annotated,
+            (m.x, m.y),
+            (m.x + m.width, m.y + m.height),
+            colour,
+            2,
+        )
 
         if draw_labels:
             label = f"{m.symbol_name} {m.confidence:.2f}"
             label_y = max(m.y - 6, 14)
             cv2.putText(
-                annotated, label,
+                annotated,
+                label,
                 (m.x, label_y),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.45, colour, 1, cv2.LINE_AA,
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.45,
+                colour,
+                1,
+                cv2.LINE_AA,
             )
 
     return annotated

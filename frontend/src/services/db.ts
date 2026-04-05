@@ -28,6 +28,7 @@ export interface SavedPattern {
   fileIdentifierRegex?: string;
   isBuiltIn?: boolean;
   createdAt: string;
+  modified?: string;
 }
 
 // Define the Database Class

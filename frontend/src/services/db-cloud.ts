@@ -1,5 +1,5 @@
 /**
- * Persistent storage service for TextHunter.
+ * Persistent storage service for TextHunter configs.
  *
  * All calls go to the Python backend (/v1/history/*).
  * The backend transparently routes to SQLite (desktop) or
@@ -15,74 +15,13 @@ import httpClient from "@/api/client";
 // Types
 // ---------------------------------------------------------------------------
 
-export interface Extraction {
-  id?: string;
-  name?: string;
-  keyword_regex: string;
-  file_identifier_regex?: string | null;
-  file_count: number;
-  match_count: number;
-  results?: unknown[];
-  created_at?: string;
-}
-
 export interface Config {
   id?: string;
   name: string;
   keyword_regex: string;
   file_identifier_regex?: string | null;
   created_at?: string;
-}
-
-// ---------------------------------------------------------------------------
-// Extractions
-// ---------------------------------------------------------------------------
-
-/** Save an extraction run. Returns the new id. */
-export async function saveExtraction(
-  data: Omit<Extraction, "id" | "created_at">,
-): Promise<string | null> {
-  try {
-    const result = await httpClient.post<{ id: string }>(
-      "/v1/history/extractions",
-      data,
-    );
-    return result.id;
-  } catch (e) {
-    console.error("saveExtraction error:", e);
-    return null;
-  }
-}
-
-/** Load extraction history (last 50, without results array). */
-export async function getExtractions(): Promise<Extraction[]> {
-  try {
-    return await httpClient.get<Extraction[]>("/v1/history/extractions");
-  } catch (e) {
-    console.error("getExtractions error:", e);
-    return [];
-  }
-}
-
-/** Load a single extraction with its full results. */
-export async function getExtractionById(
-  id: string,
-): Promise<Extraction | null> {
-  try {
-    return await httpClient.get<Extraction>(`/v1/history/extractions/${id}`);
-  } catch (e) {
-    console.error("getExtractionById error:", e);
-    return null;
-  }
-}
-
-/** Delete an extraction run. */
-export async function deleteExtraction(id: string): Promise<void> {
-  try {
-    await httpClient.delete(`/v1/history/extractions/${id}`);
-  } catch (e) {
-    console.error("deleteExtraction error:", e);
-  }
+  modified?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -91,7 +30,7 @@ export async function deleteExtraction(id: string): Promise<void> {
 
 /** Save or update a named regex config (upsert by name). */
 export async function saveConfig(
-  data: Omit<Config, "id" | "created_at">,
+  data: Omit<Config, "id" | "created_at" | "modified">,
 ): Promise<string | null> {
   try {
     const result = await httpClient.post<{ id: string }>(

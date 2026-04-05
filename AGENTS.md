@@ -1,170 +1,111 @@
-# Agent Instructions for TextHunter Desktop App
+# Agent Instructions for TextHunter
 
 ## Project Overview
 
-**Windows Desktop Application** built with:
-- **Frontend**: Vue 3 + Vite + TypeScript + Tailwind CSS
-- **Backend**: Python FastAPI sidecar (PyInstaller bundled)
-- **Build**: PyInstaller for Python, Tauri CLI for NSIS bundling
-- **Package Manager**: npm (frontend), uv (Python)
-- **HTTP Client**: Native `fetch()` API (axios incompatible with Tauri CORS)
-- **Target**: Windows x64 (NSIS installer + portable ZIP)
+**Windows Desktop App** + **Web App** for PDF text pattern extraction.
+
+| Layer | Tech |
+|-------|------|
+| Frontend | Vue 3 + Vite + TypeScript + Tailwind CSS v4 |
+| Backend | Python FastAPI sidecar (PyInstaller bundled) |
+| Desktop | Tauri v2 (Rust) |
+| Storage (desktop) | SQLite (`~/.texthunter/texthunter.db`) |
+| Storage (web) | Supabase PostgreSQL (user-scoped) |
+| Storage (frontend) | IndexedDB via Dexie.js (PDFs, text, pattern cache) |
+| Package Manager | npm (frontend), uv (Python) |
+| Linter/Formatter | Biome (frontend), Ruff (Python) |
 
 ## Key Commands
 
-### Development
 ```bash
-# Install all dependencies (Node + Python)
+# Install all deps (Node + Python)
 npm run install-reqs
 
-# Run desktop app in development mode
+# Desktop dev mode (Tauri window with hot reload)
 npm run tauri dev
 
-# Run frontend and backend separately for testing
+# Frontend + backend separately (no Tauri)
 npm run dev:all
-```
 
-### Building
-```bash
-# Build Python sidecar (required before tauri build)
+# Build Python sidecar (MUST run before any tauri build)
 npm run build:sidecar-winos
 
-# Build Windows desktop app (NSIS installer + portable)
+# Full desktop build (NSIS installer + portable)
 npm run build:desktop
+
+# Web build (deploys to xergiz.com/products/text-hunter/)
+npm run build:web
+
+# Regenerate TypeScript API types from OpenAPI spec
+cd frontend && npm run update-api
 ```
 
-## Deployment
+## Critical Rules
 
-### Windows Desktop (Primary)
-| Mode | API URL | Build Command |
-|------|---------|---------------|
-| **Development** | `http://localhost:8000` | `npm run tauri dev` |
-| **Production** | `http://localhost:8000` (bundled sidecar) | `npm run build:desktop` |
+1. **Always rebuild sidecar after Python changes**: `npm run build:sidecar-winos`
+2. **Build order**: sidecar → `npm run build` → `npm run tauri build`
+3. **Use native `fetch()` in frontend**, never axios (Tauri CORS incompatible)
+4. **Kill ports 3000/8000** before `tauri dev`
+5. **All commands use npm** (not bun/pnpm/yarn)
 
-### Web Production (Secondary - xergiz.com)
-| Mode | Base Path | API URL | Build Command |
-|------|-----------|---------|---------------|
-| **Web** | `/products/text-hunter/` | `https://api.xergiz.com/text-hunter` | `npm run build:web` |
+## Architecture
 
-Environment files:
-- `.env.development` - Local web dev
-- `.env.production` - Production web deployment
+### Backend (`backend/texthunter/`)
+- Entry: `main.py` (FastAPI on port 8000)
+- Routes: `api/routes.py` (core API), `api/configs.py` (config CRUD)
+- Storage: `core/history.py` — dual backend (SQLite for desktop, Supabase for web)
+- Configs table: `texthunter_configs` (id, user_id, name, keyword_regex, file_identifier_regex, created_at, modified)
+- **No extractions table** — extraction results handled by frontend IndexedDB
+- Migrations: `backend/migrations/*.sql` — auto-applied on startup for SQLite
 
-## Development Guidelines
+### Frontend (`frontend/src/`)
+- API client: `api/client.ts` — auto-switches URL by environment (Tauri vs web)
+- IndexedDB: `services/db.ts` — stores PDFs, extracted text, pattern cache
+- Cloud sync: `services/db-cloud.ts` — syncs configs to backend
+- RegexConfig.vue — uses both IndexedDB (local cache) + db-cloud.ts (backend sync)
+- VitePress docs built as part of every build
 
-### Python Sidecar
-- Main entry: `backend/texthunter/main.py`
-- API runs on port `8000` (desktop mode)
-- Always rebuild sidecar after Python changes: `npm run build:sidecar-winos`
-- PyInstaller bundles all dependencies into single executable
+### Tauri (`src-tauri/`)
+- Config: `tauri.conf.json`
+- Sidecar binary: `bin/api/main.exe`
+- Rust entry: `src/main.rs` (sidecar lifecycle management)
 
-### Frontend (Vue + Vite)
-- Source: `frontend/src/` directory
-- Dev server runs on port `3000`
-- API client uses native `fetch()` for Tauri CORS compatibility
-- Three modes:
-  - **Desktop**: Direct `localhost:8000` (sidecar)
-  - **Web Dev**: `/api` proxy to `localhost:8000`
-  - **Web Production**: `/api` relative path (deployed at `/products/text-hunter/`)
+### Storage Flow
+```
+Desktop:  Frontend IndexedDB ←→ Backend SQLite (localhost:8000)
+Web:      Frontend IndexedDB ←→ Backend Supabase (user-scoped via JWT)
+```
 
-### Tauri Configuration
-- Config: `src-tauri/tauri.conf.json`
-- Sidecar path: `src-tauri/bin/api/main.exe`
-- Rust main: `src-tauri/src/main.rs`
-- Icons: `src-tauri/icons/` (Windows: `.ico`, `.png`)
+## Testing
 
-## Important Notes
+```bash
+# Desktop app (recommended)
+npm run tauri dev
 
-1. **Sidecar rebuild required**: After any Python code change, run `npm run build:sidecar-winos`
-2. **Port conflicts**: Kill processes on ports 3000 and 8000 before running dev
-3. **Build order**: Always build sidecar BEFORE running `tauri build` or `npm run build:desktop`
-4. **Use npm**: All commands use npm (not bun/pnpm)
-5. **Environment switching**: API client automatically switches URLs based on environment (Tauri vs web)
+# Backend standalone
+cd backend && uv run python -m texthunter
+
+# Frontend standalone (proxies API to :8000)
+cd frontend && npm run dev
+
+# Backend tests
+cd backend && uv run pytest
+
+# Lint + typecheck
+cd backend && uv run ruff check .
+cd frontend && npx biome check src/
+```
 
 ## Common Issues
 
 | Issue | Solution |
 |-------|----------|
-| `ModuleNotFoundError: texthunter` | Rebuild sidecar with `npm run build:sidecar-winos` |
-| Sidecar not starting | Check `src-tauri/bin/api/` has `main.exe` |
+| `ModuleNotFoundError: texthunter` | Rebuild sidecar: `npm run build:sidecar-winos` |
+| Sidecar not found | Verify `src-tauri/bin/api/main.exe` exists |
 | Port 8000/3000 in use | Kill processes before `tauri dev` |
-| Build fails with permission error | Check `src-tauri/capabilities/default.json` has correct permissions |
-| API offline in frontend | Ensure using native `fetch()` not axios (CORS issue with Tauri) |
+| API offline in frontend | Must use `fetch()`, not axios |
+| `texthunter_configs` UNIQUE constraint | Unique on `(user_id, name)`, not just `name` |
 
-## File Structure
+## Version
 
-```
-text-hunter/
-├── frontend/                    # Vue.js frontend
-│   ├── src/
-│   │   ├── components/         # Vue components
-│   │   ├── services/           # API and DB services
-│   │   └── api/                # API client and types
-│   └── dist/                   # Built frontend (for Tauri)
-├── backend/                     # Python sidecar
-│   ├── texthunter/             # Python package
-│   │   ├── main.py             # FastAPI entry point (sidecar mode)
-│   │   ├── api/                # API routes
-│   │   ├── core/               # Business logic
-│   │   └── config/             # Settings
-│   └── .venv/                  # Python virtual environment
-├── src-tauri/
-│   ├── bin/api/                # Compiled sidecar executable
-│   ├── icons/                  # App icons (auto-generated)
-│   ├── src/main.rs             # Tauri Rust entry (sidecar management)
-│   ├── capabilities/           # Tauri permissions
-│   ├── tauri.conf.json         # Tauri configuration
-│   └── target/release/bundle/  # Built installers
-├── public/                      # Static assets (app icon source)
-├── package.json                 # npm scripts
-└── AGENTS.md                    # This file
-```
-
-## Build Outputs
-
-### Windows Desktop (`npm run build:desktop`)
-- **NSIS Installer**: `src-tauri/target/release/bundle/nsis/TextHunter_<version>_x64-setup.exe`
-- **Portable EXE**: `src-tauri/target/release/TextHunter.exe`
-- **Portable ZIP**: `TextHunter-portable-<version>.zip` (contains EXE + sidecar)
-
-### Web Production (`npm run build:web`)
-- **Output**: `frontend/dist/` → deploy to `xergiz.com/products/text-hunter/`
-
-## Version Sync
-
-Desktop app version syncs with web app version from `backend/pyproject.toml`:
-```toml
-[project]
-version = "0.6.0"  # This version is used for desktop app
-```
-
-Update version in one place to sync across web and desktop.
-
-## Testing
-
-### Test Desktop App (Recommended)
-```bash
-npm run tauri dev
-# Opens native window with embedded frontend + sidecar
-```
-
-### Test Sidecar Independently
-```bash
-cd backend
-uv run python -m texthunter
-# Should start on http://localhost:8000
-```
-
-### Test Frontend Independently
-```bash
-cd frontend
-npm run dev
-# Opens at http://localhost:3000
-# API requests proxy to localhost:8000
-```
-
-### Build Full Desktop App
-```bash
-npm run build:desktop
-# Creates NSIS installer and portable ZIP in src-tauri/target/release/bundle/
-```
+Synced across `backend/pyproject.toml` and `src-tauri/tauri.conf.json`. Current: `0.7.0`

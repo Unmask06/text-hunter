@@ -10,6 +10,11 @@ import {
     updateSavedPattern,
     deleteSavedPattern,
 } from "../services/db.ts";
+import {
+    saveConfig as saveCloudConfig,
+    getConfigs as getCloudConfigs,
+    deleteConfig as deleteCloudConfig,
+} from "../services/db-cloud.ts";
 
 const props = defineProps({
     disabled: {
@@ -107,16 +112,54 @@ async function seedBuiltInPresets() {
                 isBuiltIn: true,
                 createdAt: new Date().toISOString(),
             });
+            // Also seed to cloud backend
+            await saveCloudConfig({
+                name: preset.name,
+                keyword_regex: preset.pattern,
+            });
         }
     }
 }
 
 async function loadSavedPatterns() {
-    const all = await getAllSavedPatterns();
+    const local = await getAllSavedPatterns();
+    const cloud = await getCloudConfigs();
+    
+    // Merge cloud configs with local patterns (cloud is source of truth)
+    const cloudMap = new Map(cloud.map((c) => [c.name, c]));
+    const merged = local.map((p) => {
+        const cloudConfig = cloudMap.get(p.name);
+        if (cloudConfig) {
+            return {
+                ...p,
+                pattern: cloudConfig.keyword_regex,
+                fileIdentifierRegex: cloudConfig.file_identifier_regex,
+                modified: cloudConfig.modified,
+            };
+        }
+        return p;
+    });
+    
+    // Add cloud configs that don't exist locally
+    const localNames = new Set(local.map((p) => p.name));
+    for (const cloudConfig of cloud) {
+        if (!localNames.has(cloudConfig.name)) {
+            merged.push({
+                id: -Date.now() + Math.random(),
+                name: cloudConfig.name,
+                pattern: cloudConfig.keyword_regex,
+                fileIdentifierRegex: cloudConfig.file_identifier_regex,
+                isBuiltIn: false,
+                createdAt: cloudConfig.created_at,
+                modified: cloudConfig.modified,
+            });
+        }
+    }
+    
     // Built-ins first, then user patterns by recency
     savedPatterns.value = [
-        ...all.filter((p) => p.isBuiltIn),
-        ...all.filter((p) => !p.isBuiltIn),
+        ...merged.filter((p) => p.isBuiltIn),
+        ...merged.filter((p) => !p.isBuiltIn),
     ];
 }
 
@@ -171,18 +214,30 @@ async function handleSavePattern() {
     isSaving.value = true;
     try {
         const existing = savedPatterns.value.find((p) => p.name === name);
-        if (existing?.id) {
+        
+        // Save to cloud backend
+        await saveCloudConfig({
+            name,
+            keyword_regex: patternToSave,
+            file_identifier_regex: config.value.fileIdentifierRegex || undefined,
+        });
+        
+        // Save to local IndexedDB (cache)
+        if (existing?.id && typeof existing.id === 'number') {
             await updateSavedPattern(existing.id, {
                 pattern: patternToSave,
                 fileIdentifierRegex: config.value.fileIdentifierRegex || undefined,
-                isBuiltIn: false, // user-modified, no longer built-in
+                isBuiltIn: false,
+                modified: new Date().toISOString(),
             });
         } else {
             await addSavedPattern({
                 name,
                 pattern: patternToSave,
                 fileIdentifierRegex: config.value.fileIdentifierRegex || undefined,
+                isBuiltIn: false,
                 createdAt: new Date().toISOString(),
+                modified: new Date().toISOString(),
             });
         }
         savePatternName.value = "";
@@ -192,8 +247,20 @@ async function handleSavePattern() {
     }
 }
 
-async function handleDeletePattern(id) {
-    await deleteSavedPattern(id);
+async function handleDeletePattern(pattern) {
+    // Delete from cloud backend
+    if (pattern.id && typeof pattern.id === 'number' === false) {
+        // Cloud config (id is string UUID)
+        await deleteCloudConfig(pattern.id);
+    }
+    
+    // Delete from local IndexedDB (if exists)
+    const local = await getAllSavedPatterns();
+    const localPattern = local.find((p) => p.name === pattern.name);
+    if (localPattern?.id) {
+        await deleteSavedPattern(localPattern.id);
+    }
+    
     await loadSavedPatterns();
 }
 
@@ -204,7 +271,27 @@ function startRename(pattern) {
 
 async function confirmRename(pattern) {
     if (!editingName.value.trim()) return;
-    await updateSavedPattern(pattern.id, { name: editingName.value.trim() });
+    const newName = editingName.value.trim();
+    
+    // Update cloud backend (delete old, create new)
+    if (!pattern.isBuiltIn) {
+        const cloudConfigs = await getCloudConfigs();
+        const cloudConfig = cloudConfigs.find((c) => c.name === pattern.name);
+        if (cloudConfig?.id) {
+            await deleteCloudConfig(cloudConfig.id);
+        }
+        await saveCloudConfig({
+            name: newName,
+            keyword_regex: pattern.pattern,
+            file_identifier_regex: pattern.fileIdentifierRegex,
+        });
+    }
+    
+    // Update local IndexedDB
+    if (pattern.id && typeof pattern.id === 'number') {
+        await updateSavedPattern(pattern.id, { name: newName });
+    }
+    
     editingId.value = null;
     await loadSavedPatterns();
 }
@@ -505,7 +592,7 @@ function cancelRename() {
                             <button
                                 class="action-btn delete-btn"
                                 :disabled="disabled"
-                                @click="handleDeletePattern(pattern.id)"
+                                @click="handleDeletePattern(pattern)"
                                 title="Delete"
                             >
                                 ×

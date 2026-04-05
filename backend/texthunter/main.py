@@ -57,6 +57,12 @@ app.include_router(router)
 logger.info("TextHunter API initialized")
 
 
+@app.on_event("startup")
+async def _startup():
+    from texthunter.core.history import init_storage
+    await init_storage()
+
+
 @app.get("/")
 async def root() -> dict[str, str]:
     """Root endpoint with API info."""

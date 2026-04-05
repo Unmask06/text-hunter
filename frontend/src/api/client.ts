@@ -89,6 +89,18 @@ export const httpClient = {
     const blob = await response.blob();
     return { blob, filename };
   },
+
+  async delete(endpoint: string): Promise<void> {
+    const url = `${BASE_URL}${endpoint}`;
+    console.log(`DELETE ${url}`);
+    const response = await httpFetch(url, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok && response.status !== 204) {
+      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    }
+  },
 };
 
 export default httpClient;

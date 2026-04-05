@@ -7,6 +7,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
+from texthunter.api.history_routes import history_router
 from texthunter.api.schemas import (
     ExportRequest,
     ExtractionRequest,
@@ -20,6 +21,7 @@ from texthunter.core.regex import extract_matches, guess_regex
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+router.include_router(history_router, prefix="/v1/history")
 
 
 @router.get("/health")

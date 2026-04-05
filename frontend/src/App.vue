@@ -245,10 +245,7 @@ async function checkBackendStatusWithRetry() {
             <div>
               <h1 class="app-title">PDFHunter</h1>
               <div class="status-indicator">
-                <div :class="['status-dot', backendStatus === 'online' ? 'status-online' : 'status-offline']"></div>
-                <span class="text-[10px] font-bold uppercase tracking-widest">
-                  {{ backendStatus === 'online' ? 'API Online' : 'API Offline' }}
-                </span>
+                <div :class="['status-dot', backendStatus === 'online' ? 'status-online' : 'status-offline']" :title="backendStatus === 'online' ? 'API Online' : 'API Offline'"></div>
               </div>
             </div>          </div>
 

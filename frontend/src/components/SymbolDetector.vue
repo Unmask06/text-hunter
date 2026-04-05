@@ -265,8 +265,12 @@ function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.includes(",") ? result.split(",")[1] : result);
+      const result = reader.result as string | null;
+      if (!result) {
+        reject(new Error("FileReader result is null"));
+        return;
+      }
+      resolve(result.includes(",") ? (result.split(",")[1] || result) : result);
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);

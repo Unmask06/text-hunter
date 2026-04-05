@@ -80,7 +80,8 @@ class SQLiteStorage:
                 async with db.execute(
                     "SELECT 1 FROM _migrations WHERE filename = ?", (sql_file.name,)
                 ) as cursor:
-                    if await cursor.fetchone():
+                    row = await cursor.fetchone()
+                    if row is not None:
                         logger.debug(
                             "Migration %s already applied, skipping", sql_file.name
                         )

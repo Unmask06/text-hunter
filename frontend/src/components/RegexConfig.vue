@@ -5,12 +5,6 @@
 import { computed, ref, watch, onMounted } from "vue";
 import { guessRegex } from "../services/api.ts";
 import {
-    getAllSavedPatterns,
-    addSavedPattern,
-    updateSavedPattern,
-    deleteSavedPattern,
-} from "../services/db.ts";
-import {
     saveConfig as saveCloudConfig,
     getConfigs as getCloudConfigs,
     deleteConfig as deleteCloudConfig,
@@ -111,17 +105,10 @@ onMounted(async () => {
 });
 
 async function seedBuiltInPresets() {
-    const all = await getAllSavedPatterns();
-    const existingNames = new Set(all.map((p) => p.name));
+    const cloud = await getCloudConfigs();
+    const existingNames = new Set(cloud.map((c) => c.name));
     for (const preset of BUILT_IN_PRESETS) {
         if (!existingNames.has(preset.name)) {
-            await addSavedPattern({
-                name: preset.name,
-                pattern: preset.pattern,
-                isBuiltIn: true,
-                createdAt: new Date().toISOString(),
-            });
-            // Also seed to cloud backend
             await saveCloudConfig({
                 name: preset.name,
                 keyword_regex: preset.pattern,
@@ -133,55 +120,27 @@ async function seedBuiltInPresets() {
 async function loadSavedPatterns() {
     isLoadingPresets.value = true;
     presetsLoadError.value = "";
-    
+
     try {
-        let local = [];
-        try {
-            local = await getAllSavedPatterns();
-        } catch (dbError) {
-            console.warn("[RegexConfig] IndexedDB error, using empty local cache:", dbError);
-            local = [];
-        }
-        
         const cloud = await getCloudConfigs();
-        
-        // Merge cloud configs with local patterns (cloud is source of truth)
-        const cloudMap = new Map(cloud.map((c) => [c.name, c]));
-        const merged = local.map((p) => {
-            const cloudConfig = cloudMap.get(p.name);
-            if (cloudConfig) {
-                return {
-                    ...p,
-                    pattern: cloudConfig.keyword_regex,
-                    fileIdentifierRegex: cloudConfig.file_identifier_regex,
-                    modified: cloudConfig.modified,
-                };
-            }
-            return p;
-        });
-        
-        // Add cloud configs that don't exist locally
-        const localNames = new Set(local.map((p) => p.name));
-        for (const cloudConfig of cloud) {
-            if (!localNames.has(cloudConfig.name)) {
-                merged.push({
-                    id: -Date.now() + Math.random(),
-                    name: cloudConfig.name,
-                    pattern: cloudConfig.keyword_regex,
-                    fileIdentifierRegex: cloudConfig.file_identifier_regex,
-                    isBuiltIn: false,
-                    createdAt: cloudConfig.created_at,
-                    modified: cloudConfig.modified,
-                });
-            }
-        }
-        
-        // Built-ins first, then user patterns by recency
+        const builtInNames = new Set(BUILT_IN_PRESETS.map((p) => p.name));
+
+        const patterns = cloud.map((c) => ({
+            id: c.id,
+            name: c.name,
+            pattern: c.keyword_regex,
+            fileIdentifierRegex: c.file_identifier_regex,
+            isBuiltIn: builtInNames.has(c.name),
+            createdAt: c.created_at,
+            modified: c.modified,
+        }));
+
+        // Built-ins first, then user patterns
         savedPatterns.value = [
-            ...merged.filter((p) => p.isBuiltIn),
-            ...merged.filter((p) => !p.isBuiltIn),
+            ...patterns.filter((p) => p.isBuiltIn),
+            ...patterns.filter((p) => !p.isBuiltIn),
         ];
-        
+
         console.log(`[RegexConfig] Loaded ${savedPatterns.value.length} presets total`);
     } catch (error) {
         console.error("[RegexConfig] Failed to load presets:", error);
@@ -241,33 +200,11 @@ async function handleSavePattern() {
     if (!patternToSave || !name) return;
     isSaving.value = true;
     try {
-        const existing = savedPatterns.value.find((p) => p.name === name);
-        
-        // Save to cloud backend
         await saveCloudConfig({
             name,
             keyword_regex: patternToSave,
             file_identifier_regex: config.value.fileIdentifierRegex || undefined,
         });
-        
-        // Save to local IndexedDB (cache)
-        if (existing?.id && typeof existing.id === 'number') {
-            await updateSavedPattern(existing.id, {
-                pattern: patternToSave,
-                fileIdentifierRegex: config.value.fileIdentifierRegex || undefined,
-                isBuiltIn: false,
-                modified: new Date().toISOString(),
-            });
-        } else {
-            await addSavedPattern({
-                name,
-                pattern: patternToSave,
-                fileIdentifierRegex: config.value.fileIdentifierRegex || undefined,
-                isBuiltIn: false,
-                createdAt: new Date().toISOString(),
-                modified: new Date().toISOString(),
-            });
-        }
         savePatternName.value = "";
         await loadSavedPatterns();
     } finally {
@@ -276,19 +213,9 @@ async function handleSavePattern() {
 }
 
 async function handleDeletePattern(pattern) {
-    // Delete from cloud backend
-    if (pattern.id && typeof pattern.id === 'number' === false) {
-        // Cloud config (id is string UUID)
+    if (pattern.id) {
         await deleteCloudConfig(pattern.id);
     }
-    
-    // Delete from local IndexedDB (if exists)
-    const local = await getAllSavedPatterns();
-    const localPattern = local.find((p) => p.name === pattern.name);
-    if (localPattern?.id) {
-        await deleteSavedPattern(localPattern.id);
-    }
-    
     await loadSavedPatterns();
 }
 
@@ -300,26 +227,16 @@ function startRename(pattern) {
 async function confirmRename(pattern) {
     if (!editingName.value.trim()) return;
     const newName = editingName.value.trim();
-    
-    // Update cloud backend (delete old, create new)
-    if (!pattern.isBuiltIn) {
-        const cloudConfigs = await getCloudConfigs();
-        const cloudConfig = cloudConfigs.find((c) => c.name === pattern.name);
-        if (cloudConfig?.id) {
-            await deleteCloudConfig(cloudConfig.id);
-        }
+
+    if (!pattern.isBuiltIn && pattern.id) {
+        await deleteCloudConfig(pattern.id);
         await saveCloudConfig({
             name: newName,
             keyword_regex: pattern.pattern,
             file_identifier_regex: pattern.fileIdentifierRegex,
         });
     }
-    
-    // Update local IndexedDB
-    if (pattern.id && typeof pattern.id === 'number') {
-        await updateSavedPattern(pattern.id, { name: newName });
-    }
-    
+
     editingId.value = null;
     await loadSavedPatterns();
 }

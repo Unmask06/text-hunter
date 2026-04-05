@@ -21,33 +21,17 @@ export interface ExtractedTextRecord {
   text: string;
 }
 
-export interface SavedPattern {
-  id?: number;
-  name: string;
-  pattern: string;
-  fileIdentifierRegex?: string;
-  isBuiltIn?: boolean;
-  createdAt: string;
-  modified?: string;
-}
-
 // Define the Database Class
 class TextHunterDatabase extends Dexie {
   // We use EntityTable to link our Interfaces to the Table names
   pdfs!: EntityTable<PdfRecord, "id">;
   extractedText!: EntityTable<ExtractedTextRecord, "id">;
-  savedPatterns!: EntityTable<SavedPattern, "id">;
 
   constructor() {
     super("TextExtractorDB");
     this.version(1).stores({
       pdfs: "++id, name, status", // Only index fields you plan to filter by
       extractedText: "++id, pdfId",
-    });
-    this.version(2).stores({
-      pdfs: "++id, name, status",
-      extractedText: "++id, pdfId",
-      savedPatterns: "++id, name",
     });
   }
 }
@@ -177,47 +161,6 @@ export async function getAllExtractedText(): Promise<
 export async function clearAllData(): Promise<void> {
   await db.extractedText.clear();
   await db.pdfs.clear();
-}
-
-/**
- * Get all user-saved regex patterns
- */
-export async function getAllSavedPatterns(): Promise<SavedPattern[]> {
-  try {
-    const patterns = await db.savedPatterns.orderBy("createdAt").reverse().toArray();
-    console.log(`[db] Loaded ${patterns.length} patterns from IndexedDB`);
-    return patterns;
-  } catch (error) {
-    console.error("[db] getAllSavedPatterns failed:", error);
-    // If table doesn't exist or is corrupted, return empty array
-    return [];
-  }
-}
-
-/**
- * Save a new regex pattern
- */
-export async function addSavedPattern(
-  pattern: Omit<SavedPattern, "id">,
-): Promise<number> {
-  return (await db.savedPatterns.add(pattern)) as number;
-}
-
-/**
- * Update a saved pattern (e.g., rename)
- */
-export async function updateSavedPattern(
-  id: number,
-  changes: Partial<SavedPattern>,
-): Promise<number> {
-  return (await db.savedPatterns.update(id, changes)) as number;
-}
-
-/**
- * Delete a saved pattern
- */
-export async function deleteSavedPattern(id: number): Promise<void> {
-  await db.savedPatterns.delete(id);
 }
 
 export default db;

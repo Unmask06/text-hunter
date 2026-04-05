@@ -60,6 +60,7 @@ logger.info("PDFHunter API initialized")
 @app.on_event("startup")
 async def _startup():
     from texthunter.core.history import init_storage
+
     await init_storage()
 
 
@@ -79,7 +80,7 @@ from texthunter.license import clear_license, validate_license
 
 @app.get("/v1/connect")
 async def connect() -> dict:
-    """Connection endpoint for Tauri sidecar."""
+    """Return connection info for Tauri sidecar."""
     return {
         "message": f"Connected to PDFHunter API on port {PORT_API}",
         "data": {

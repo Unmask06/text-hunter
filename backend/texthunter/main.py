@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from texthunter.api.routes import router
 from texthunter.config.settings import CORS_ORIGINS
+from texthunter.license import clear_license, validate_license
 
 # Configure logging
 logging.basicConfig(
@@ -73,9 +74,6 @@ async def root() -> dict[str, str]:
         "version": version("texthunter"),
         "docs": "/docs",
     }
-
-
-from texthunter.license import clear_license, validate_license
 
 
 @app.get("/v1/connect")

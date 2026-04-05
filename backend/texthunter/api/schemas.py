@@ -77,7 +77,9 @@ class BoundingBox(BaseModel):
 class SymbolTemplate(BaseModel):
     """A named symbol template encoded as a base64 PNG image."""
 
-    name: str = Field(..., description="Human-readable symbol name, e.g. 'Control Valve'")
+    name: str = Field(
+        ..., description="Human-readable symbol name, e.g. 'Control Valve'"
+    )
     image_b64: str = Field(..., description="Base64-encoded PNG of the template image")
     source_legend_page: int | None = Field(
         None, description="Legend page this template was extracted from"
@@ -94,7 +96,9 @@ class LegendExtractRequest(BaseModel):
     )
     symbol_names: list[str] | None = Field(
         None,
-        description="Names for each bounding_box (required when bounding_boxes is provided).",
+        description=(
+            "Names for each bounding_box (required when bounding_boxes is provided)."
+        ),
     )
 
 
@@ -129,9 +133,13 @@ class SymbolDetectRequest(BaseModel):
     """Detect symbols across pages of a target P&ID PDF."""
 
     pdf_b64: str = Field(..., description="Base64-encoded PDF file to scan")
-    templates: list[SymbolTemplate] = Field(..., description="Symbol templates to search for")
+    templates: list[SymbolTemplate] = Field(
+        ..., description="Symbol templates to search for"
+    )
     dpi: int = Field(default=150, ge=72, le=300, description="PDF rendering resolution")
-    threshold: float = Field(default=0.75, ge=0.5, le=0.99, description="Confidence threshold")
+    threshold: float = Field(
+        default=0.75, ge=0.5, le=0.99, description="Confidence threshold"
+    )
     scale_range: tuple[float, float] = Field(default=(0.7, 1.3))
     enable_rotation: bool = Field(
         default=False, description="Search rotated variants (4× slower)"
@@ -139,8 +147,10 @@ class SymbolDetectRequest(BaseModel):
     nearby_text_radius_px: int = Field(default=80)
     existing_text_content: dict[str, dict[int, str]] | None = Field(
         None,
-        description="Pre-extracted text from the PDF worker (filename -> page -> text). "
-                    "Used for tag association; skips re-extraction when provided.",
+        description=(
+            "Pre-extracted text from the PDF worker (filename -> page -> text). "
+            "Used for tag association; skips re-extraction when provided."
+        ),
     )
 
 
@@ -173,4 +183,3 @@ class VisionExportRequest(BaseModel):
 
     results: list[SymbolDetectionResult]
     include_annotated_images: bool = Field(default=False)
-

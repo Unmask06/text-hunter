@@ -134,7 +134,9 @@ def generate_vision_excel(results: list[SymbolDetectionResult]) -> BytesIO:
         df.to_excel(writer, index=False, sheet_name="Symbol Detections")
         worksheet = writer.sheets["Symbol Detections"]
 
-        header_fill = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
+        header_fill = PatternFill(
+            start_color="1F4E79", end_color="1F4E79", fill_type="solid"
+        )
         header_font = Font(color="FFFFFF", bold=True)
 
         for cell in worksheet[1]:
@@ -157,4 +159,3 @@ def generate_vision_excel(results: list[SymbolDetectionResult]) -> BytesIO:
 
     buffer.seek(0)
     return buffer
-

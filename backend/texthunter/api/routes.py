@@ -241,7 +241,7 @@ async def extract_legend(payload: LegendExtractRequest):
         names = payload.symbol_names or [f"Symbol {i + 1}" for i in range(len(boxes))]
         crops = extract_legend_templates(image, boxes)
 
-        for i, (crop, name) in enumerate(zip(crops, names)):
+        for i, (crop, name) in enumerate(zip(crops, names, strict=True)):
             b = payload.bounding_boxes[i]
             _cv2.rectangle(
                 annotated, (b.x, b.y), (b.x + b.width, b.y + b.height), (0, 255, 0), 2

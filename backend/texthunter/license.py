@@ -90,7 +90,10 @@ def validate_license() -> dict:
     if local_version < latest_version:
         return {
             "valid": False,
-            "message": f"Update required. Your version ({local_version_str}) is outdated. Please download v{latest_version_str}.",
+            "message": (
+                f"Update required. Your version ({local_version_str}) is outdated. "
+                f"Please download v{latest_version_str}."
+            ),
             "offline": False,
             "details": {
                 "valid": False,

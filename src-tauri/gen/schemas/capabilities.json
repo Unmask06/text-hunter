@@ -1,1 +1,28 @@
-{"default":{"identifier":"default","description":"Default capabilities for TextHunter","local":true,"windows":["main"],"permissions":["core:default","shell:allow-spawn","shell:allow-stdin-write","shell:default","shell:allow-open","http:default","fs:default","fs:allow-write-text-file",{"identifier":"http:default","allow":[{"url":"http://localhost:*"},{"url":"http://127.0.0.1:*"}]},{"identifier":"fs:default","allow":[{"path":"$DOWNLOAD/*"}]}]}}
+{
+  "default": {
+    "identifier": "default",
+    "description": "Default capabilities for TextHunter",
+    "local": true,
+    "windows": ["main"],
+    "permissions": [
+      "core:default",
+      "shell:allow-spawn",
+      "shell:allow-stdin-write",
+      "shell:default",
+      "shell:allow-open",
+      "http:default",
+      "fs:default",
+      "fs:allow-write-text-file",
+      {
+        "identifier": "http:default",
+        "allow": [
+          { "url": "http://localhost:*" },
+          { "url": "http://127.0.0.1:*" },
+          { "url": "https://*.supabase.co" },
+          { "url": "https://*.supabase.io" }
+        ]
+      },
+      { "identifier": "fs:default", "allow": [{ "path": "$DOWNLOAD/*" }] }
+    ]
+  }
+}

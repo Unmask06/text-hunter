@@ -45,6 +45,8 @@ const isEditingPattern = ref(false); // inline edit for suggestedPattern
 const savedPatterns = ref([]);
 const savePatternName = ref("");
 const isSaving = ref(false);
+const isLoadingPresets = ref(false);
+const presetsLoadError = ref("");
 const editingId = ref(null);   // rename saved pattern
 const editingName = ref("");
 const isEditingActivePattern = ref(false); // inline edit for loaded preset
@@ -96,6 +98,13 @@ const filledExamples = computed(() =>
 
 const activePatternPreview = computed(() => config.value.keywordRegex || "");
 
+// Watch for mode toggle and refresh presets when switching to 'presets' tab
+watch(mode, async (newMode) => {
+    if (newMode === 'presets') {
+        await loadSavedPatterns();
+    }
+});
+
 onMounted(async () => {
     await seedBuiltInPresets();
     await loadSavedPatterns();
@@ -122,45 +131,55 @@ async function seedBuiltInPresets() {
 }
 
 async function loadSavedPatterns() {
-    const local = await getAllSavedPatterns();
-    const cloud = await getCloudConfigs();
+    isLoadingPresets.value = true;
+    presetsLoadError.value = "";
     
-    // Merge cloud configs with local patterns (cloud is source of truth)
-    const cloudMap = new Map(cloud.map((c) => [c.name, c]));
-    const merged = local.map((p) => {
-        const cloudConfig = cloudMap.get(p.name);
-        if (cloudConfig) {
-            return {
-                ...p,
-                pattern: cloudConfig.keyword_regex,
-                fileIdentifierRegex: cloudConfig.file_identifier_regex,
-                modified: cloudConfig.modified,
-            };
+    try {
+        const local = await getAllSavedPatterns();
+        const cloud = await getCloudConfigs();
+        
+        // Merge cloud configs with local patterns (cloud is source of truth)
+        const cloudMap = new Map(cloud.map((c) => [c.name, c]));
+        const merged = local.map((p) => {
+            const cloudConfig = cloudMap.get(p.name);
+            if (cloudConfig) {
+                return {
+                    ...p,
+                    pattern: cloudConfig.keyword_regex,
+                    fileIdentifierRegex: cloudConfig.file_identifier_regex,
+                    modified: cloudConfig.modified,
+                };
+            }
+            return p;
+        });
+        
+        // Add cloud configs that don't exist locally
+        const localNames = new Set(local.map((p) => p.name));
+        for (const cloudConfig of cloud) {
+            if (!localNames.has(cloudConfig.name)) {
+                merged.push({
+                    id: -Date.now() + Math.random(),
+                    name: cloudConfig.name,
+                    pattern: cloudConfig.keyword_regex,
+                    fileIdentifierRegex: cloudConfig.file_identifier_regex,
+                    isBuiltIn: false,
+                    createdAt: cloudConfig.created_at,
+                    modified: cloudConfig.modified,
+                });
+            }
         }
-        return p;
-    });
-    
-    // Add cloud configs that don't exist locally
-    const localNames = new Set(local.map((p) => p.name));
-    for (const cloudConfig of cloud) {
-        if (!localNames.has(cloudConfig.name)) {
-            merged.push({
-                id: -Date.now() + Math.random(),
-                name: cloudConfig.name,
-                pattern: cloudConfig.keyword_regex,
-                fileIdentifierRegex: cloudConfig.file_identifier_regex,
-                isBuiltIn: false,
-                createdAt: cloudConfig.created_at,
-                modified: cloudConfig.modified,
-            });
-        }
+        
+        // Built-ins first, then user patterns by recency
+        savedPatterns.value = [
+            ...merged.filter((p) => p.isBuiltIn),
+            ...merged.filter((p) => !p.isBuiltIn),
+        ];
+    } catch (error) {
+        console.error("Failed to load presets:", error);
+        presetsLoadError.value = "Failed to load presets from database";
+    } finally {
+        isLoadingPresets.value = false;
     }
-    
-    // Built-ins first, then user patterns by recency
-    savedPatterns.value = [
-        ...merged.filter((p) => p.isBuiltIn),
-        ...merged.filter((p) => !p.isBuiltIn),
-    ];
 }
 
 async function handleGeneratePattern() {
@@ -467,9 +486,23 @@ function cancelRename() {
 
         <!-- Presets Tab -->
         <div v-else class="space-y-5 animate-fade-in">
+            
+            <!-- Loading State -->
+            <div v-if="isLoadingPresets" class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading presets from database...</p>
+            </div>
+            
+            <!-- Error State -->
+            <div v-else-if="presetsLoadError" class="error-state">
+                <p class="text-error-500">{{ presetsLoadError }}</p>
+                <button class="btn-secondary mt-2" @click="loadSavedPatterns">
+                    Retry
+                </button>
+            </div>
 
             <!-- Active Pattern (shown after loading a preset) -->
-            <div v-if="keywordRegex" class="active-pattern-section">
+            <div v-else-if="keywordRegex" class="active-pattern-section">
                 <label class="badge-label">Active Pattern</label>
                 <div class="flex items-center gap-2">
                     <template v-if="isEditingActivePattern">
@@ -744,6 +777,18 @@ function cancelRename() {
 
 .empty-state {
     @apply text-center text-slate-500 text-sm py-6 rounded-lg border border-dashed border-white/10;
+}
+
+.loading-state {
+    @apply flex flex-col items-center justify-center gap-3 py-8 text-center;
+}
+
+.spinner {
+    @apply w-8 h-8 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin;
+}
+
+.error-state {
+    @apply text-center py-6 px-4 rounded-lg border border-red-500/20 bg-red-500/5;
 }
 
 .saved-pattern-row {

@@ -37,9 +37,13 @@ export async function saveConfig(
       "/v1/history/configs",
       data,
     );
+    console.log(`[db-cloud] Saved config "${data.name}" with id: ${result.id}`);
     return result.id;
   } catch (e) {
-    console.error("saveConfig error:", e);
+    console.error("[db-cloud] saveConfig error:", e);
+    console.warn(
+      "[db-cloud] Backend unreachable - config saved locally only",
+    );
     return null;
   }
 }
@@ -47,9 +51,14 @@ export async function saveConfig(
 /** Load all saved regex configs. */
 export async function getConfigs(): Promise<Config[]> {
   try {
-    return await httpClient.get<Config[]>("/v1/history/configs");
+    const result = await httpClient.get<Config[]>("/v1/history/configs");
+    console.log(`[db-cloud] Loaded ${result.length} configs from backend`);
+    return result;
   } catch (e) {
-    console.error("getConfigs error:", e);
+    console.error("[db-cloud] getConfigs error:", e);
+    console.warn(
+      "[db-cloud] Backend unreachable - presets will only show local cache",
+    );
     return [];
   }
 }

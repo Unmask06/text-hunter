@@ -33,17 +33,15 @@ export async function saveConfig(
   data: Omit<Config, "id" | "created_at" | "modified">,
 ): Promise<string | null> {
   try {
-    const result = await httpClient.post<{ id: string }>(
+    const result = await httpClient.post<Config>(
       "/v1/history/configs",
       data,
     );
     console.log(`[db-cloud] Saved config "${data.name}" with id: ${result.id}`);
-    return result.id;
+    return result.id ?? null;
   } catch (e) {
     console.error("[db-cloud] saveConfig error:", e);
-    console.warn(
-      "[db-cloud] Backend unreachable - config saved locally only",
-    );
+    console.warn("[db-cloud] Backend unreachable — config was NOT saved");
     return null;
   }
 }
@@ -56,9 +54,7 @@ export async function getConfigs(): Promise<Config[]> {
     return result;
   } catch (e) {
     console.error("[db-cloud] getConfigs error:", e);
-    console.warn(
-      "[db-cloud] Backend unreachable - presets will only show local cache",
-    );
+    console.warn("[db-cloud] Backend unreachable — presets cannot be loaded");
     return [];
   }
 }

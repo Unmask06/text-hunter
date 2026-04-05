@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BASE_URL, isTauri } from "@/api/client.ts";
+import { isTauri } from "@/api/client.ts";
 import { checkLicense, type LicenseStatus } from "@/services/license.ts";
 import { onBeforeUnmount, onMounted, ref } from "vue";
 
@@ -46,19 +46,11 @@ async function waitForSidecar(): Promise<LicenseStatus> {
 onMounted(async () => {
   if (!isTauri) {
     // Web mode: app is already visible (status set synchronously above).
-    // Do a background version check against the production API — no blocking UI.
+    // Do a background version check — no blocking UI.
     emit("validated", true);
     try {
-      const response = await fetch(BASE_URL);
-      if (response.ok) {
-        const data = await response.json() as { version?: string };
-        const version = data.version ?? "unknown";
-        status.value = {
-          valid: true,
-          message: `TextHunter v${version}`,
-          details: { valid: true, local_version: version, latest_version: version, cached_at: "", expires_at: "" },
-        };
-      }
+      const result = await checkLicense();
+      status.value = result;
     } catch {
       // API unreachable — app already rendered, nothing to do
     }

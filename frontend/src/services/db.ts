@@ -183,7 +183,15 @@ export async function clearAllData(): Promise<void> {
  * Get all user-saved regex patterns
  */
 export async function getAllSavedPatterns(): Promise<SavedPattern[]> {
-  return db.savedPatterns.orderBy("createdAt").reverse().toArray();
+  try {
+    const patterns = await db.savedPatterns.orderBy("createdAt").reverse().toArray();
+    console.log(`[db] Loaded ${patterns.length} patterns from IndexedDB`);
+    return patterns;
+  } catch (error) {
+    console.error("[db] getAllSavedPatterns failed:", error);
+    // If table doesn't exist or is corrupted, return empty array
+    return [];
+  }
 }
 
 /**

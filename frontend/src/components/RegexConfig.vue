@@ -135,7 +135,14 @@ async function loadSavedPatterns() {
     presetsLoadError.value = "";
     
     try {
-        const local = await getAllSavedPatterns();
+        let local = [];
+        try {
+            local = await getAllSavedPatterns();
+        } catch (dbError) {
+            console.warn("[RegexConfig] IndexedDB error, using empty local cache:", dbError);
+            local = [];
+        }
+        
         const cloud = await getCloudConfigs();
         
         // Merge cloud configs with local patterns (cloud is source of truth)
@@ -174,8 +181,10 @@ async function loadSavedPatterns() {
             ...merged.filter((p) => p.isBuiltIn),
             ...merged.filter((p) => !p.isBuiltIn),
         ];
+        
+        console.log(`[RegexConfig] Loaded ${savedPatterns.value.length} presets total`);
     } catch (error) {
-        console.error("Failed to load presets:", error);
+        console.error("[RegexConfig] Failed to load presets:", error);
         presetsLoadError.value = "Failed to load presets from database";
     } finally {
         isLoadingPresets.value = false;

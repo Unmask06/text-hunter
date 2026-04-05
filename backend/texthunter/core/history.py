@@ -9,6 +9,7 @@ Both classes expose the same async interface so routes are backend-agnostic.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import uuid
@@ -163,6 +164,19 @@ class SQLiteStorage:
                 rows = await cursor.fetchall()
         return [dict(r) for r in rows]
 
+    async def get_config(self, config_id: str) -> dict | None:
+        """Fetch a single config by id."""
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute(
+                """SELECT id, name, keyword_regex, file_identifier_regex,
+                          created_at, modified
+                   FROM texthunter_configs WHERE id = ?""",
+                (config_id,),
+            ) as cursor:
+                row = await cursor.fetchone()
+        return dict(row) if row else None
+
     async def delete_config(self, config_id: str, user_id: str | None = None) -> None:
         """Delete a config by id, scoped to user_id."""
         # For desktop mode, get user_id from %USERNAME%
@@ -207,17 +221,19 @@ class SupabaseStorage:
             "keyword_regex": data["keyword_regex"],
             "file_identifier_regex": data.get("file_identifier_regex"),
         }
-        result = (
-            self._client.table("texthunter_configs")
+        result = await asyncio.to_thread(
+            lambda: self._client.table("texthunter_configs")
             .upsert(payload, on_conflict="user_id,name")
             .execute()
         )
+        if not result.data:
+            raise RuntimeError("Supabase upsert returned no data")
         return result.data[0]["id"]
 
     async def get_configs(self, user_id: str | None = None) -> list[dict]:
         """List all configs for the given user."""
-        result = (
-            self._client.table("texthunter_configs")
+        result = await asyncio.to_thread(
+            lambda: self._client.table("texthunter_configs")
             .select("id,name,keyword_regex,file_identifier_regex,created_at,modified")
             .eq("user_id", user_id)
             .order("name")
@@ -225,11 +241,25 @@ class SupabaseStorage:
         )
         return result.data
 
+    async def get_config(self, config_id: str) -> dict | None:
+        """Fetch a single config by id."""
+        result = await asyncio.to_thread(
+            lambda: self._client.table("texthunter_configs")
+            .select("id,name,keyword_regex,file_identifier_regex,created_at,modified")
+            .eq("id", config_id)
+            .execute()
+        )
+        return result.data[0] if result.data else None
+
     async def delete_config(self, config_id: str, user_id: str | None = None) -> None:
         """Delete a config by id, scoped to user_id."""
-        self._client.table("texthunter_configs").delete().eq("id", config_id).eq(
-            "user_id", user_id
-        ).execute()
+        await asyncio.to_thread(
+            lambda: self._client.table("texthunter_configs")
+            .delete()
+            .eq("id", config_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
 
 
 # ---------------------------------------------------------------------------

@@ -8,9 +8,6 @@ import { path } from "@tauri-apps/api";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { open } from "@tauri-apps/plugin-shell";
 
-/** @deprecated Use isTauri from @/api/client.ts directly */
-export const isDesktop = isTauri;
-
 /**
  * Save a blob to the Downloads folder.
  * @param filename - Name of the file to save

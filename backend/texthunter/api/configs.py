@@ -35,8 +35,11 @@ async def _get_user_id(authorization: str | None = Header(default=None)) -> str 
         )
 
     if not _JWT_SECRET:
-        logger.warning("SUPABASE_JWT_SECRET not configured — skipping JWT verification")
-        return None
+        logger.error("SUPABASE_JWT_SECRET not configured but a Bearer token was received")
+        raise HTTPException(
+            status_code=500,
+            detail="Server misconfiguration: JWT secret not set",
+        )
 
     from jose import JWTError, jwt
 
@@ -79,15 +82,19 @@ class ConfigResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@configs_router.post("/configs")
+@configs_router.post("/configs", response_model=ConfigResponse)
 async def save_config(
     payload: ConfigCreate,
     authorization: str | None = Header(default=None),
 ):
     """Save or update a named regex config."""
     user_id = await _get_user_id(authorization)
-    new_id = await get_storage().save_config(payload.model_dump(), user_id=user_id)
-    return {"id": new_id}
+    storage = get_storage()
+    new_id = await storage.save_config(payload.model_dump(), user_id=user_id)
+    config = await storage.get_config(new_id)
+    if config is None:
+        raise HTTPException(status_code=500, detail="Config saved but could not be retrieved")
+    return config
 
 
 @configs_router.get("/configs")

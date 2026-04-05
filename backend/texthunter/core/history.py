@@ -31,6 +31,11 @@ def _get_db_path() -> Path:
     return Path.home() / ".texthunter" / "texthunter.db"
 
 
+def _get_desktop_user_id() -> str | None:
+    """Get user_id for desktop mode from %USERNAME% environment variable."""
+    return os.environ.get("USERNAME")
+
+
 DB_PATH = _get_db_path()
 MIGRATIONS_DIR = Path(__file__).parent.parent.parent / "migrations"
 
@@ -98,13 +103,14 @@ class SQLiteStorage:
 
     async def save_config(self, data: dict, user_id: str | None = None) -> str:
         """Save or update a config. Upserts by (user_id, name)."""
+        # For desktop mode, get user_id from %USERNAME%
+        if user_id is None:
+            user_id = _get_desktop_user_id()
+
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            query = (
-                "SELECT id FROM texthunter_configs "
-                "WHERE name = ? AND (user_id IS ? OR user_id = ?)"
-            )
-            async with db.execute(query, (data["name"], user_id, user_id)) as cursor:
+            query = "SELECT id FROM texthunter_configs WHERE name = ? AND user_id IS ?"
+            async with db.execute(query, (data["name"], user_id)) as cursor:
                 existing = await cursor.fetchone()
 
             if existing:
@@ -140,26 +146,33 @@ class SQLiteStorage:
 
     async def get_configs(self, user_id: str | None = None) -> list[dict]:
         """List all configs for the given user (or all if user_id is None)."""
+        # For desktop mode, get user_id from %USERNAME%
+        if user_id is None:
+            user_id = _get_desktop_user_id()
+
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
             async with db.execute(
                 """SELECT id, name, keyword_regex, file_identifier_regex,
                           created_at, modified
                    FROM texthunter_configs
-                   WHERE user_id IS ? OR user_id = ?
+                   WHERE user_id IS ?
                    ORDER BY name""",
-                (user_id, user_id),
+                (user_id,),
             ) as cursor:
                 rows = await cursor.fetchall()
         return [dict(r) for r in rows]
 
     async def delete_config(self, config_id: str, user_id: str | None = None) -> None:
         """Delete a config by id, scoped to user_id."""
+        # For desktop mode, get user_id from %USERNAME%
+        if user_id is None:
+            user_id = _get_desktop_user_id()
+
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(
-                "DELETE FROM texthunter_configs "
-                "WHERE id = ? AND (user_id IS ? OR user_id = ?)",
-                (config_id, user_id, user_id),
+                "DELETE FROM texthunter_configs WHERE id = ? AND user_id IS ?",
+                (config_id, user_id),
             )
             await db.commit()
 

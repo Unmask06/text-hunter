@@ -57,6 +57,12 @@ app.include_router(router)
 logger.info("PDFHunter API initialized")
 
 
+@app.on_event("startup")
+async def _startup():
+    from texthunter.core.history import init_storage
+    await init_storage()
+
+
 @app.get("/")
 async def root() -> dict[str, str]:
     """Root endpoint with API info."""
@@ -68,9 +74,7 @@ async def root() -> dict[str, str]:
     }
 
 
-import asyncio
-
-from texthunter.license import validate_license
+from texthunter.license import clear_license, validate_license
 
 @app.get("/v1/connect")
 async def connect() -> dict:
@@ -93,6 +97,16 @@ async def check_license() -> dict:
         dict with version validation status
     """
     return await asyncio.to_thread(validate_license)
+
+
+@app.get("/v1/license/clear")
+async def clear_license_endpoint() -> dict:
+    """Clear cached license (for testing).
+
+    Returns:
+        dict with status message
+    """
+    return clear_license()
 
 
 def kill_process():

@@ -68,7 +68,7 @@ async def root() -> dict[str, str]:
     }
 
 
-from texthunter.license import validate_license, clear_license
+from texthunter.license import clear_license, validate_license
 
 @app.get("/v1/connect")
 async def connect() -> dict:
@@ -91,6 +91,7 @@ async def check_license() -> dict:
         dict with license validation status
     """
     return validate_license()
+
 
 
 @app.get("/v1/license/clear")

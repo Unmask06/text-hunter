@@ -19,11 +19,9 @@ const getBaseUrl = (): string => {
   return import.meta.env.VITE_API_URL || "/api";
 };
 
-const BASE_URL = getBaseUrl();
-
 export const httpClient = {
   async get<T>(endpoint: string): Promise<T> {
-    const url = `${BASE_URL}${endpoint}`;
+    const url = `${getBaseUrl()}${endpoint}`;
     console.log(`GET ${url}`);
     try {
       const response = await fetch(url, {
@@ -42,7 +40,7 @@ export const httpClient = {
   },
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
-    const url = `${BASE_URL}${endpoint}`;
+    const url = `${getBaseUrl()}${endpoint}`;
     console.log(`POST ${url}`);
     const response = await fetch(url, {
       method: "POST",
@@ -56,7 +54,7 @@ export const httpClient = {
   },
 
   async postBlob(endpoint: string, data?: unknown): Promise<{ blob: Blob; filename: string }> {
-    const url = `${BASE_URL}${endpoint}`;
+    const url = `${getBaseUrl()}${endpoint}`;
     console.log(`POST ${url}`);
     const response = await fetch(url, {
       method: "POST",

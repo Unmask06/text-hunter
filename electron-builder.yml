@@ -47,5 +47,3 @@ publish:
   owner: xergiz
   repo: text-hunter
   releaseType: release
-
-beforeBuild: npm run build:sidecar-winos

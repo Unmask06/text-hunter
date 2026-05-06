@@ -79,6 +79,7 @@ function spawnSidecar(): void {
 
   sidecarProcess.on('error', (err: Error) => {
     console.error('[electron] Sidecar process error:', err);
+    mainWindow?.webContents.send('sidecar:error', err.message);
   });
 
   sidecarProcess.on('exit', (code: number | null) => {
@@ -94,7 +95,7 @@ function shutdownSidecar(): void {
     console.log('[electron] Shutting down sidecar...');
     
     try {
-      sidecarProcess.stdin?.write('sidecar shutdown\n');
+      sidecarProcess.stdin?.end('sidecar shutdown\n');
     } catch (err) {
       console.error('[electron] Failed to write to sidecar stdin:', err);
     }
@@ -171,6 +172,12 @@ autoUpdater.on('error', (err) => {
   console.error('[electron] Auto-updater error:', err);
 });
 
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
 app.whenReady().then(() => {
   console.log('[electron] App ready, spawning sidecar...');
   spawnSidecar();
@@ -180,12 +187,6 @@ app.whenReady().then(() => {
     console.log('[electron] Checking for updates...');
     autoUpdater.checkForUpdatesAndNotify();
   }
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
 });
 
 app.on('before-quit', () => {

@@ -1,41 +1,32 @@
 /**
- * Simple HTTP client using Tauri's fetch for desktop compatibility.
- *
+ * HTTP client for TextHunter.
+ * 
  * URL configuration by environment:
- * - Desktop (Tauri): http://localhost:8000 (sidecar)
+ * - Desktop (Electron): http://localhost:8000 (sidecar)
  * - Dev (vite): /api (proxied to localhost:8000)
  * - Production: https://api.xergiz.com/text-hunter
  */
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 
-// Determine API base URL based on environment
 const getBaseUrl = (): string => {
-  // Check if running in Tauri desktop app
-  const isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
+  const isElectron = typeof window !== 'undefined' && 
+    window.electronAPI !== undefined && 
+    window.electronAPI.isElectron === true;
 
-  if (isTauri) {
-    // Desktop app: direct connection to Python sidecar
+  if (isElectron) {
     return "http://localhost:8000";
   }
 
-  // Web mode: use environment variable
-  // - Dev: /api (proxied by Vite to localhost:8000)
-  // - Production: https://api.xergiz.com/text-hunter
   return import.meta.env.VITE_API_URL || "/api";
 };
 
 const BASE_URL = getBaseUrl();
-
-// Use Tauri fetch in desktop app, native fetch in web
-const useTauriFetch = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
-const httpFetch = useTauriFetch ? tauriFetch : window.fetch;
 
 export const httpClient = {
   async get<T>(endpoint: string): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
     console.log(`GET ${url}`);
     try {
-      const response = await httpFetch(url, {
+      const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -53,7 +44,7 @@ export const httpClient = {
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
     console.log(`POST ${url}`);
-    const response = await httpFetch(url, {
+    const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: data ? JSON.stringify(data) : null,
@@ -67,7 +58,7 @@ export const httpClient = {
   async postBlob(endpoint: string, data?: unknown): Promise<{ blob: Blob; filename: string }> {
     const url = `${BASE_URL}${endpoint}`;
     console.log(`POST ${url}`);
-    const response = await httpFetch(url, {
+    const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: data ? JSON.stringify(data) : null,
@@ -76,7 +67,6 @@ export const httpClient = {
       throw new Error(`HTTP ${response.status}: ${await response.text()}`);
     }
 
-    // Extract filename from Content-Disposition header
     let filename = "extraction_results.xlsx";
     const contentDisposition = response.headers.get("content-disposition");
     if (contentDisposition) {
@@ -92,4 +82,3 @@ export const httpClient = {
 };
 
 export default httpClient;
-

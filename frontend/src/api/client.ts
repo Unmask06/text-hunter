@@ -6,112 +6,94 @@
  * - Dev (vite): /api (proxied to localhost:8000)
  * - Production: https://api.xergiz.com/text-hunter
  */
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 
 export const isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
 
+async function httpFetch(url: string, options?: RequestInit): Promise<Response> {
+  if (isTauri) {
+    const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+    return tauriFetch(url, options);
+  }
+  return window.fetch(url, options);
+}
+
 const getBaseUrl = (): string => {
   if (isTauri) {
-    return 'http://localhost:8000';
+    // Desktop app: direct connection to Python sidecar
+    return "http://localhost:8000";
   }
-  return import.meta.env.VITE_API_URL || '/api';
+
+  // Web mode: use environment variable
+  // - Dev: /api (proxied by Vite to localhost:8000)
+  // - Production: https://api.xergiz.com/text-hunter
+  return import.meta.env.VITE_API_URL || "/api";
 };
 
-const BASE_URL = getBaseUrl();
-
-const httpFetch = isTauri ? tauriFetch : window.fetch.bind(window);
-
-function isRetryable(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  const msg = error.message.toLowerCase();
-  return (
-    msg.includes('network') ||
-    msg.includes('failed to fetch') ||
-    msg.includes('connection refused') ||
-    msg.includes('econnrefused') ||
-    msg.includes('load failed')
-  );
-}
-
-async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
-  let lastError: unknown;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error;
-      if (!isRetryable(error) || attempt === maxRetries) break;
-      const delay = Math.pow(2, attempt) * 500;
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-  }
-  throw lastError;
-}
+export const BASE_URL = getBaseUrl();
 
 export const httpClient = {
   async get<T>(endpoint: string): Promise<T> {
-    const url = \\\\;
-    return withRetry(async () => {
-      const response = await httpFetch(url, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) {
-        throw new Error(\HTTP \: \\);
-      }
-      return response.json() as T;
+    const url = `${BASE_URL}${endpoint}`;
+    const response = await httpFetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
     });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    }
+    return response.json() as T;
   },
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
-    const url = \\\\;
-    return withRetry(async () => {
-      const response = await httpFetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: data ? JSON.stringify(data) : null,
-      });
-      if (!response.ok) {
-        throw new Error(\HTTP \: \\);
-      }
-      return response.json() as T;
+    const url = `${BASE_URL}${endpoint}`;
+    const response = await httpFetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: data ? JSON.stringify(data) : null,
     });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    }
+    return response.json() as T;
   },
 
   async postBlob(endpoint: string, data?: unknown): Promise<{ blob: Blob; filename: string }> {
-    const url = \\\\;
-    return withRetry(async () => {
-      const response = await httpFetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: data ? JSON.stringify(data) : null,
-      });
-      if (!response.ok) {
-        throw new Error(\HTTP \: \\);
-      }
-      let filename = 'extraction_results.xlsx';
-      const contentDisposition = response.headers.get('content-disposition');
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename=(.+)/);
-        if (match && match[1]) {
-          filename = match[1];
-        }
-      }
-      const blob = await response.blob();
-      return { blob, filename };
+    const url = `${BASE_URL}${endpoint}`;
+    const response = await httpFetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: data ? JSON.stringify(data) : null,
     });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    }
+
+    // Extract filename from Content-Disposition header
+    let filename = "extraction_results.xlsx";
+    const contentDisposition = response.headers.get("content-disposition");
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename=(.+)/);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+
+    const blob = await response.blob();
+    return { blob, filename };
   },
 
   async delete(endpoint: string): Promise<void> {
-    const url = \\\\;
+    const url = `${BASE_URL}${endpoint}`;
+    console.log(`DELETE ${url}`);
     const response = await httpFetch(url, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
     });
     if (!response.ok && response.status !== 204) {
-      throw new Error(\HTTP \: \\);
+      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
     }
   },
 };
 
 export default httpClient;
+

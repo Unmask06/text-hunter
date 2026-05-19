@@ -54,8 +54,8 @@ describe('RegexConfig', () => {
     const wrapper = mount(RegexConfig);
 
     const inputs = wrapper.findAll('input[type="text"]');
-    await inputs[0].setValue('10"-FG-001');
-    await inputs[1].setValue('2"-CWS-505');
+    await inputs[0]!.setValue('10"-FG-001');
+    await inputs[1]!.setValue('2"-CWS-505');
 
     await wrapper.find('button.btn-accent').trigger('click');
     // Wait for the async guessRegex call to resolve
@@ -71,8 +71,8 @@ describe('RegexConfig', () => {
     const wrapper = mount(RegexConfig);
 
     const inputs = wrapper.findAll('input[type="text"]');
-    await inputs[0].setValue('A');
-    await inputs[1].setValue('B');
+    await inputs[0]!.setValue('A');
+    await inputs[1]!.setValue('B');
 
     await wrapper.find('button.btn-accent').trigger('click');
     await new Promise((r) => setTimeout(r, 0));
@@ -86,10 +86,10 @@ describe('RegexConfig', () => {
 
     // Switch to manual mode
     const buttons = wrapper.findAll('button.toggle-btn');
-    await buttons[1].trigger('click'); // "Advanced Manual Regex"
+    await buttons[1]!.trigger('click'); // "Advanced Manual Regex"
 
     const inputs = wrapper.findAll('input[type="text"]');
-    await inputs[0].setValue('\\d+-[A-Z]+-\\d+');
+    await inputs[0]!.setValue('\\d+-[A-Z]+-\\d+');
 
     await wrapper.find('button.btn-primary').trigger('click');
 
@@ -97,6 +97,6 @@ describe('RegexConfig', () => {
     expect(emitted).toBeTruthy();
     // Non-null assertion: toBeTruthy() above already guards this
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    expect(emitted![0][0]).toMatchObject({ keywordRegex: '\\d+-[A-Z]+-\\d+' });
+    expect(emitted![0]![0]).toMatchObject({ keywordRegex: '\\d+-[A-Z]+-\\d+' });
   });
 });

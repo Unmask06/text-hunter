@@ -3,11 +3,9 @@ import vue from '@vitejs/plugin-vue'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, type Plugin } from 'vitest/config'
 import checker from 'vite-plugin-checker'
 
-// Custom Vite plugin to serve static docs from dist folder
-// especially useful during development when using a subpath base
 function serveStaticDocs(): Plugin {
   return {
     name: 'serve-static-docs',
@@ -26,17 +24,14 @@ function serveStaticDocs(): Plugin {
           let reqPath = url.replace(basePath, '');
           if (url === '/docs' || url === '/docs/') reqPath = '';
           
-          // Remove query string from path
           const cleanPath = reqPath.includes('?') ? reqPath.split('?')[0] ?? '' : reqPath;
           
-          // Determine dist directory based on target
           const docsDistDir = isWeb 
             ? path.join(process.cwd(), 'dist', 'products', 'text-hunter', 'docs')
             : path.join(process.cwd(), 'dist', 'docs');
             
           let filePath = path.join(docsDistDir, cleanPath);
           
-          // Serve index.html for directory root
           if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
             filePath = path.join(filePath, 'index.html');
           }
@@ -63,44 +58,53 @@ function serveStaticDocs(): Plugin {
   };
 }
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    vue(), 
-    tailwindcss(), 
-    checker({
-      typescript: true,
-      vueTsc: true
-    }),
+    vue(),
+    tailwindcss(),
+    ...(process.env.NODE_ENV !== 'test'
+      ? [checker({ typescript: true, vueTsc: true })]
+      : []),
     serveStaticDocs()
   ],
 
-  // Base path configuration:
-  // - Web mode: /products/text-hunter/ (for deployed web app)
-  // - Desktop (Tauri) and dev: "/" (Tauri serves root, docs at /docs/)
   base: process.env.VITE_BUILD_TARGET === 'web' ? '/products/text-hunter/' : '/',
 
   build: {
-    outDir: "dist",
+    outDir: 'dist',
   },
 
-  // Development: proxy API requests to the local backend server
   server: {
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',  // Consistent with desktop app port
+        target: 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     },
     fs: {
-      allow: [".", "../docs"],
+      allow: ['.', '../docs'],
     },
   },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
-  }
+  },
+
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    include: ['src/**/__tests__/**/*.test.ts'],
+    alias: {
+      '@tauri-apps/plugin-http': fileURLToPath(
+        new URL('./src/__mocks__/@tauri-apps/plugin-http.ts', import.meta.url)
+      ),
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+    },
+  },
 })

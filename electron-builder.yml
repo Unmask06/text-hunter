@@ -1,0 +1,48 @@
+appId: com.xergiz.text-hunter
+productName: TextHunter
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - frontend/dist/**/*
+  - electron/**/*
+  - "!**/node_modules/*/{CHANGELOG.md,README.md,readme.md,LICENSE,license}"
+  - "!**/node_modules/.bin"
+  - "!**/*.{ts,tsx,map}"
+  - "!electron/*.ts"
+
+extraResources:
+  - from: backend/dist/main.exe
+    to: sidecar/main.exe
+    filter: "**/*"
+
+win:
+  target:
+    - target: nsis
+      arch: x64
+    - target: portable
+      arch: x64
+  icon: build/icons/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  installerIcon: build/icons/icon.ico
+  uninstallerIcon: build/icons/icon.ico
+  installerHeaderIcon: build/icons/icon.ico
+  license: null
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+
+portable:
+  artifactName: TextHunter-${version}-Portable.exe
+
+publish:
+  provider: github
+  owner: xergiz
+  repo: text-hunter
+  releaseType: release

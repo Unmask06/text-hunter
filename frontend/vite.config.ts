@@ -77,8 +77,8 @@ export default defineConfig({
 
   // Base path configuration:
   // - Web mode: /products/text-hunter/ (for deployed web app)
-  // - Desktop (Tauri) and dev: "/" (Tauri serves root, docs at /docs/)
-  base: process.env.VITE_BUILD_TARGET === 'web' ? '/products/text-hunter/' : '/',
+  // - Desktop (Electron) and dev: "./" (Electron serves from dist/, docs at /docs/)
+  base: process.env.VITE_BUILD_TARGET === 'web' ? '/products/text-hunter/' : './',
 
   build: {
     outDir: "dist",

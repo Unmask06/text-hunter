@@ -6,7 +6,7 @@ const isWeb = process.env.VITE_BUILD_TARGET === 'web';
 
 // Default to desktop (Tauri) build
 const base = isWeb ? "/products/text-hunter/docs/" : "/docs/";
-const outDir = isWeb ? "../dist/products/text-hunter/docs" : "../dist/docs";
+const outDir = isWeb ? "../dist/products/text-hunter/docs" : "../public/docs";
 const canonical = isWeb ? "/products/text-hunter/docs/" : "/docs/";
 
 // For dev mode, use command-line API to set base path

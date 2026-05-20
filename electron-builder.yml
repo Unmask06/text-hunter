@@ -1,6 +1,5 @@
 appId: com.xergiz.text-hunter
 productName: TextHunter
-version: 0.7.0
 
 directories:
   output: release

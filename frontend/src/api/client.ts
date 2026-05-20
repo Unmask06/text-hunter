@@ -1,3 +1,5 @@
+/// <reference path="../../../electron/electron-env.d.ts" />
+
 /**
  * HTTP client for TextHunter.
  * 

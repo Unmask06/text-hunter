@@ -309,13 +309,13 @@ onUnmounted(() => {
         <!-- Legend canvas -->
         <div v-if="legendImageB64" class="space-y-3">
           <!-- Page navigation -->
-          <div v-if="legendTotalPages > 1" class="flex items-center gap-3 text-sm text-slate-400">
+          <div v-if="legendTotalPages > 1" class="flex items-center gap-3 text-sm text-text-tertiary">
             <button class="sd-nav-btn" :disabled="legendCurrentPage === 1" @click="prevLegendPage">‹ Prev</button>
             <span>Page {{ legendCurrentPage }} / {{ legendTotalPages }}</span>
             <button class="sd-nav-btn" :disabled="legendCurrentPage === legendTotalPages" @click="nextLegendPage">Next ›</button>
           </div>
 
-          <p class="text-xs text-slate-500">Draw rectangles around symbols on the canvas below.</p>
+          <p class="text-xs text-text-muted">Draw rectangles around symbols on the canvas below.</p>
 
           <div class="sd-canvas-wrap" :style="{ aspectRatio: `${legendWidth} / ${legendHeight}` }">
             <canvas
@@ -326,7 +326,7 @@ onUnmounted(() => {
               @mouseup="onMouseUp"
             />
             <div v-if="isRenderingLegend" class="sd-canvas-overlay">
-              <svg class="w-6 h-6 animate-spin text-indigo-400" fill="none" viewBox="0 0 24 24">
+              <svg class="w-6 h-6 animate-spin text-accent-400" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -336,14 +336,14 @@ onUnmounted(() => {
 
           <!-- Drawn boxes list -->
           <div v-if="drawnBoxes.length > 0" class="space-y-2">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Annotated Symbols</p>
+            <p class="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Annotated Symbols</p>
             <div v-for="(box, i) in drawnBoxes" :key="i" class="flex items-center gap-2">
               <input
                 v-model="symbolNames[i]"
                 class="sd-name-input"
                 :placeholder="`Symbol ${i + 1}`"
               />
-              <span class="text-xs text-slate-600">{{ box.width }}×{{ box.height }}px</span>
+              <span class="text-xs text-text-muted">{{ box.width }}×{{ box.height }}px</span>
               <button class="sd-remove-btn" @click="removeBox(i)">✕</button>
             </div>
           </div>
@@ -374,7 +374,7 @@ onUnmounted(() => {
 
         <!-- Extracted templates preview -->
         <div v-if="extractedTemplates.length > 0" class="space-y-2">
-          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <p class="text-xs font-semibold text-text-tertiary uppercase tracking-wider">
             {{ extractedTemplates.length }} Template(s) Ready
           </p>
           <div class="flex flex-wrap gap-3">
@@ -388,7 +388,7 @@ onUnmounted(() => {
                 :alt="tmpl.name"
                 class="w-10 h-10 object-contain bg-white rounded"
               />
-              <span class="text-xs text-slate-300 max-w-[80px] truncate">{{ tmpl.name }}</span>
+              <span class="text-xs text-text-secondary max-w-[80px] truncate">{{ tmpl.name }}</span>
             </div>
           </div>
         </div>
@@ -413,8 +413,8 @@ onUnmounted(() => {
             Choose Target PDF
           </span>
         </label>
-        <p v-if="targetPdfName" class="mt-2 text-sm text-slate-400">
-          <svg class="w-4 h-4 inline mr-1 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <p v-if="targetPdfName" class="mt-2 text-sm text-text-tertiary">
+          <svg class="w-4 h-4 inline mr-1 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
           {{ targetPdfName }}
@@ -435,7 +435,7 @@ onUnmounted(() => {
           <div class="space-y-1">
             <label class="sd-label">Confidence Threshold: <strong class="text-white">{{ threshold.toFixed(2) }}</strong></label>
             <input type="range" v-model.number="threshold" min="0.5" max="0.99" step="0.01" class="w-full accent-indigo-500" />
-            <p class="text-xs text-slate-600">Higher = fewer false positives</p>
+            <p class="text-xs text-text-muted">Higher = fewer false positives</p>
           </div>
           <!-- DPI -->
           <div class="space-y-1">
@@ -446,16 +446,16 @@ onUnmounted(() => {
               <option :value="200">200 (higher quality)</option>
               <option :value="300">300 (best)</option>
             </select>
-            <p class="text-xs text-slate-600">Controls PDF page rendering resolution for symbol detection</p>
+            <p class="text-xs text-text-muted">Controls PDF page rendering resolution for symbol detection</p>
           </div>
           <!-- Rotation -->
           <div class="space-y-1">
             <label class="sd-label">Rotation Search</label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" v-model="enableRotation" class="accent-indigo-500 w-4 h-4" />
-              <span class="text-sm text-slate-300">Enable (0°/90°/180°/270°)</span>
+              <span class="text-sm text-text-secondary">Enable (0°/90°/180°/270°)</span>
             </label>
-            <p class="text-xs text-slate-600">Enables 4× more checks per page</p>
+            <p class="text-xs text-text-muted">Enables 4× more checks per page</p>
           </div>
         </div>
 
@@ -476,7 +476,7 @@ onUnmounted(() => {
           {{ isDetecting ? 'Detecting…' : 'Run Detection' }}
         </button>
 
-        <p v-if="detectError" class="text-sm text-red-400">{{ detectError }}</p>
+        <p v-if="detectError" class="text-sm text-error">{{ detectError }}</p>
       </div>
     </section>
 
@@ -492,17 +492,17 @@ onUnmounted(() => {
         <!-- Annotated page viewer -->
         <div v-if="annotatedPages.length > 0" class="space-y-3">
           <div class="flex items-center gap-3">
-            <p class="text-sm font-semibold text-slate-300">Annotated Pages</p>
+            <p class="text-sm font-semibold text-text-secondary">Annotated Pages</p>
             <div class="flex gap-2 ml-auto">
               <button class="sd-nav-btn" :disabled="currentPage === 0" @click="currentPage--">‹ Prev</button>
-              <span class="text-xs text-slate-400">Page {{ currentPage + 1 }} / {{ annotatedPages.length }}</span>
+              <span class="text-xs text-text-tertiary">Page {{ currentPage + 1 }} / {{ annotatedPages.length }}</span>
               <button class="sd-nav-btn" :disabled="currentPage === annotatedPages.length - 1" @click="currentPage++">Next ›</button>
             </div>
           </div>
           <img
             :src="`data:image/png;base64,${annotatedPages[currentPage]}`"
             alt="Annotated P&ID page"
-            class="w-full rounded-lg border border-white/10 shadow-lg"
+            class="w-full rounded-lg border border-border-default shadow-lg"
           />
         </div>
 
@@ -521,16 +521,16 @@ onUnmounted(() => {
             </thead>
             <tbody>
               <tr v-for="(r, i) in detectionResults" :key="i">
-                <td class="font-medium text-slate-200">{{ r.symbol_name }}</td>
+                <td class="font-medium text-text-primary">{{ r.symbol_name }}</td>
                 <td>{{ r.page }}</td>
                 <td>{{ r.bbox.x }}, {{ r.bbox.y }}</td>
                 <td>{{ r.bbox.width }} × {{ r.bbox.height }}</td>
                 <td>
-                  <span :class="r.confidence >= 0.9 ? 'text-emerald-400' : r.confidence >= 0.75 ? 'text-amber-400' : 'text-slate-400'">
+                  <span :class="r.confidence >= 0.9 ? 'text-success' : r.confidence >= 0.75 ? 'text-warning' : 'text-text-tertiary'">
                     {{ (r.confidence * 100).toFixed(1) }}%
                   </span>
                 </td>
-                <td class="text-xs text-slate-400">{{ r.associated_tags.join(", ") || "—" }}</td>
+                <td class="text-xs text-text-tertiary">{{ r.associated_tags.join(", ") || "—" }}</td>
               </tr>
             </tbody>
           </table>
@@ -564,27 +564,27 @@ onUnmounted(() => {
 }
 
 .sd-card {
-  @apply rounded-2xl border border-white/8 bg-slate-900/60 backdrop-blur-sm overflow-hidden;
+  @apply rounded-2xl border border-border-default bg-bg-card/60 backdrop-blur-sm overflow-hidden;
 }
 
 .sd-card-header {
-  @apply px-6 py-5 border-b border-white/5 flex flex-col gap-1;
+  @apply px-space-6 py-space-5 border-b border-border-subtle flex flex-col gap-1;
 }
 
 .sd-card-body {
-  @apply px-6 py-5;
+  @apply px-space-6 py-space-5;
 }
 
 .sd-step-badge {
-  @apply inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-600 text-white text-sm font-black mb-1;
+  @apply inline-flex items-center justify-center w-7 h-7 rounded-full bg-accent-600 text-white text-sm font-black mb-1;
 }
 
 .sd-section-title {
-  @apply text-base font-bold text-white;
+  @apply text-base font-bold text-text-primary;
 }
 
 .sd-section-sub {
-  @apply text-xs text-slate-500;
+  @apply text-xs text-text-muted;
 }
 
 .sd-file-label {
@@ -592,12 +592,12 @@ onUnmounted(() => {
 }
 
 .sd-file-btn {
-  @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-slate-200 text-sm font-semibold
-         border border-white/8 hover:bg-slate-700 transition-colors;
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-input text-text-secondary text-sm font-semibold
+         border border-border-default hover:bg-bg-input-hover transition-colors;
 }
 
 .sd-canvas-wrap {
-  @apply relative w-full border border-white/10 rounded-xl overflow-hidden cursor-crosshair;
+  @apply relative w-full border border-border-default rounded-xl overflow-hidden cursor-crosshair;
 }
 
 .sd-canvas {
@@ -609,58 +609,58 @@ onUnmounted(() => {
 }
 
 .sd-name-input {
-  @apply flex-1 px-3 py-1.5 rounded-lg bg-slate-800 border border-white/8 text-sm text-slate-200
-         focus:outline-none focus:ring-1 focus:ring-indigo-500;
+  @apply flex-1 px-3 py-1.5 rounded-lg bg-bg-input border border-border-default text-sm text-text-secondary
+         focus:outline-none focus:ring-1 focus:ring-accent-500;
 }
 
 .sd-remove-btn {
-  @apply px-2 py-1 rounded-lg bg-red-900/40 text-red-400 text-xs hover:bg-red-800/60 transition-colors;
+  @apply px-2 py-1 rounded-lg bg-error-bg text-error text-xs hover:bg-red-500/20 transition-colors;
 }
 
 .sd-template-chip {
-  @apply flex flex-col items-center gap-1 p-2 rounded-xl border border-white/8 bg-slate-800/60;
+  @apply flex flex-col items-center gap-1 p-2 rounded-xl border border-border-default bg-bg-input/60;
 }
 
 .sd-label {
-  @apply block text-xs font-semibold text-slate-400 uppercase tracking-wider;
+  @apply block text-xs font-semibold text-text-tertiary uppercase tracking-wider;
 }
 
 .sd-select {
-  @apply w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/8 text-sm text-slate-200
-         focus:outline-none focus:ring-1 focus:ring-indigo-500;
+  @apply w-full px-3 py-2 rounded-xl bg-bg-input border border-border-default text-sm text-text-secondary
+         focus:outline-none focus:ring-1 focus:ring-accent-500;
 }
 
 .sd-nav-btn {
-  @apply px-3 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold border border-white/8
-         hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors;
+  @apply px-3 py-1 rounded-lg bg-bg-input text-text-tertiary text-xs font-semibold border border-border-default
+         hover:bg-bg-input-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors;
 }
 
 .sd-btn-primary {
-  @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold
-         hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors;
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-600 text-white text-sm font-semibold
+         hover:bg-accent-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors;
 }
 
 .sd-btn-secondary {
-  @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 text-white text-sm font-semibold
-         hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors border border-white/8;
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-input-hover text-white text-sm font-semibold
+         hover:bg-bg-input disabled:opacity-40 disabled:cursor-not-allowed transition-colors border border-border-default;
 }
 
 .sd-btn-run {
-  @apply inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold
-         hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-lg shadow-emerald-900/30;
+  @apply inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-success text-white text-sm font-bold
+         hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-lg shadow-success/30;
 }
 
 .sd-btn-export {
-  @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-white text-sm font-semibold
-         hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors border border-white/8;
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-input text-white text-sm font-semibold
+         hover:bg-bg-input-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors border border-border-default;
 }
 
 .sd-table {
-  @apply w-full text-sm text-slate-300 border-collapse;
+  @apply w-full text-sm text-text-secondary border-collapse;
 }
 
 .sd-table thead tr {
-  @apply bg-slate-800/80 text-xs uppercase tracking-wider text-slate-400;
+  @apply bg-bg-input/80 text-xs uppercase tracking-wider text-text-tertiary;
 }
 
 .sd-table th {
@@ -668,7 +668,7 @@ onUnmounted(() => {
 }
 
 .sd-table tbody tr {
-  @apply border-t border-white/5 hover:bg-white/3 transition-colors;
+  @apply border-t border-border-subtle hover:bg-white/3 transition-colors;
 }
 
 .sd-table td {

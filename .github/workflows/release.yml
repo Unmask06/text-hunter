@@ -39,7 +39,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - run: cd frontend && npm ci && npm run build
       - uses: actions/upload-artifact@v4
         with:
@@ -86,7 +86,7 @@ jobs:
 
   # 3. Build desktop app (Windows) - ALWAYS runs on push to main
   build-desktop:
-    runs-on: windows-latest
+    runs-on: windows-2025
     outputs:
       version: ${{ steps.get-version.outputs.version }}
     steps:
@@ -94,7 +94,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - uses: actions/setup-python@v5
         with:

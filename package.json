@@ -6,39 +6,37 @@
   "type": "commonjs",
   "scripts": {
     "install-reqs": "cd frontend && npm install && cd backend && uv sync",
-
     "dev": "npm run dev:electron",
     "dev:electron": "concurrently \"npm run dev:sidecar\" \"npm run dev:frontend\" \"npm run electron:start\"",
     "dev:sidecar": "cd backend && uv run python -m texthunter",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:all": "concurrently \"npm run dev:sidecar\" \"npm run dev:frontend\"",
     "electron:start": "wait-on http://localhost:3000 && cross-env NODE_ENV=development tsx electron/main.ts",
-
+    "generate:sdk": "openapi-ts",
+    "generate:sdk:watch": "openapi-ts --watch",
     "build:sidecar-winos": "cd backend && ..\\backend\\.venv\\Scripts\\pyinstaller.exe -c -F --clean --name main --distpath dist --paths . texthunter/main.py",
-
-    "build": "npm run build:frontend && npm run build:electron:compile && npm run build:electron",
+    "build": "npm run generate:sdk && npm run build:frontend && npm run build:electron:compile && npm run build:electron",
     "build:frontend": "cd frontend && npm run build",
     "build:electron:compile": "tsc -p electron/tsconfig.json",
     "build:electron": "electron-builder --win",
     "build:desktop": "npm run build:sidecar-winos && npm run build",
     "build:web": "cd frontend && npm run build:web",
-
     "postinstall": "electron-builder install-app-deps",
-
     "clean": "Remove-Item -Recurse -Force release, frontend/dist, backend/dist, electron/*.js, electron/*.d.ts -ErrorAction SilentlyContinue"
   },
   "dependencies": {
+    "@hey-api/openapi-ts": "0.97.3",
     "electron-updater": "^6.3.9"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "electron": "^34.0.0",
     "electron-builder": "^25.1.8",
     "tsx": "^4.19.0",
     "typescript": "^5.9.3",
-    "concurrently": "^8.2.2",
-    "cross-env": "^7.0.3",
-    "wait-on": "^8.0.3",
-    "@vitejs/plugin-vue": "^6.0.1",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "wait-on": "^8.0.3"
   }
 }

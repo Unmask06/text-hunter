@@ -82,7 +82,7 @@ class ConfigResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@configs_router.post("/configs", response_model=ConfigResponse)
+@configs_router.post("/configs", response_model=ConfigResponse, operation_id="post_config")
 async def save_config(
     payload: ConfigCreate,
     authorization: str | None = Header(default=None),
@@ -97,14 +97,14 @@ async def save_config(
     return config
 
 
-@configs_router.get("/configs")
+@configs_router.get("/configs", response_model=list[ConfigResponse], operation_id="get_configs")
 async def list_configs(authorization: str | None = Header(default=None)):
     """List all saved configs for the current user."""
     user_id = await _get_user_id(authorization)
     return await get_storage().get_configs(user_id=user_id)
 
 
-@configs_router.delete("/configs/{config_id}", status_code=204)
+@configs_router.delete("/configs/{config_id}", status_code=204, operation_id="delete_config")
 async def delete_config(
     config_id: str,
     authorization: str | None = Header(default=None),

@@ -44,6 +44,20 @@ class ExtractionResponse(BaseModel):
     preview_count: int = Field(default=10, description="Number of matches in preview")
 
 
+class ExtractionAllResponse(BaseModel):
+    """Response from extract-all endpoint."""
+
+    matches: list[MatchResult]
+    total_count: int
+
+
+class HealthResponse(BaseModel):
+    """Response from health check endpoint."""
+
+    status: str
+    timestamp: str
+
+
 class RegexGuessResponse(BaseModel):
     """Response from regex guess endpoint."""
 

@@ -3,7 +3,7 @@
  * Handles version validation to control distribution.
  */
 
-import httpClient from "@/api/client.ts";
+import { api } from "@/services/api.ts";
 
 export interface LicenseDetails {
   valid: boolean;
@@ -28,12 +28,15 @@ export interface LicenseStatus {
  * The backend will check cache first, then GitHub API if needed.
  */
 export async function checkLicense(): Promise<LicenseStatus> {
-  return httpClient.get<LicenseStatus>("/v1/license/check");
+  const { data, error } = await api.getLicenseCheck();
+  if (error) throw new Error(`HTTP error: ${error}`);
+  return data as unknown as LicenseStatus;
 }
 
 /**
  * Clear cached license (useful for testing).
  */
 export async function clearLicense(): Promise<void> {
-  return httpClient.get("/v1/license/clear");
+  const { error } = await api.getLicenseClear();
+  if (error) throw new Error(`HTTP error: ${error}`);
 }

@@ -1,7 +1,11 @@
 /**
- * Export utility for TextHunter web app.
- * Handles downloading files in browser environments.
+ * Export utility for TextHunter desktop app.
+ * Handles downloading files in browser and desktop environments.
  */
+
+const isElectron = typeof window !== 'undefined' &&
+  window.electronAPI !== undefined &&
+  window.electronAPI.isElectron === true;
 
 /**
  * Open a file URL in browser (web-only, uses window.open).
@@ -13,12 +17,14 @@ export function openFile(url: string): void {
 
 /**
  * Export matches to Excel file.
- * Triggers a browser download.
+ * On desktop: triggers browser download via blob URL
+ * On web: triggers browser download via blob URL
  *
  * @param blob - The Excel file as a Blob
  * @param filename - The filename to use
+ * @returns null (always, for API compatibility)
  */
-export async function exportExcelFile(blob: Blob, filename: string): Promise<void> {
+export async function exportExcelFile(blob: Blob, filename: string): Promise<string | null> {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -27,4 +33,5 @@ export async function exportExcelFile(blob: Blob, filename: string): Promise<voi
   link.click();
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
+  return null;
 }

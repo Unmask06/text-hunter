@@ -8,11 +8,13 @@
  * Step 4: View annotated results + export to Excel
  */
 import { computed, nextTick, onUnmounted, ref } from "vue";
+import type {
+  BoundingBox,
+  SymbolDetectionResult,
+  SymbolDetectResponse,
+  SymbolTemplate,
+} from "@/client/types.gen";
 import {
-  type BoundingBox,
-  type SymbolDetectionResult,
-  type SymbolDetectResponse,
-  type SymbolTemplate,
   detectSymbols,
   exportVisionResults,
   extractLegendTemplates,
@@ -232,7 +234,7 @@ async function runDetection() {
       enable_rotation: enableRotation.value,
     });
     detectionResults.value = res.results;
-    annotatedPages.value = res.annotated_pages_b64;
+    annotatedPages.value = res.annotated_pages_b64 ?? [];
   } catch (e: unknown) {
     detectError.value = e instanceof Error ? e.message : "Detection failed";
   } finally {
@@ -530,7 +532,7 @@ onUnmounted(() => {
                     {{ (r.confidence * 100).toFixed(1) }}%
                   </span>
                 </td>
-                <td class="text-xs text-text-tertiary">{{ r.associated_tags.join(", ") || "—" }}</td>
+                <td class="text-xs text-text-tertiary">{{ (r.associated_tags ?? []).join(", ") || "—" }}</td>
               </tr>
             </tbody>
           </table>

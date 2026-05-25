@@ -11,7 +11,7 @@ import RegexConfig from "./components/RegexConfig.vue";
 import ResultsTable from "./components/ResultsTable.vue";
 import SymbolDetector from "./components/SymbolDetector.vue";
 import ThemeToggle from "./components/base/ThemeToggle.vue";
-import type { components } from "./api/schema.ts";
+import type { MatchResult } from "./client/types.gen";
 import {
   exportExcel,
   extractAllMatches,
@@ -30,7 +30,7 @@ import {
 
 // Active tab: 'text' | 'vision'
 const activeTab = ref("text");
-type MatchResult = components["schemas"]["MatchResult"];
+// MatchResult type is imported from client/types.gen above
 
 // State
 const files = ref<PdfRecord[]>([]);

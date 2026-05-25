@@ -1,6 +1,6 @@
 @echo off
 REM TextHunter Launch Script
-REM This script starts both backend and frontend servers
+REM This script installs dependencies and starts both backend and frontend servers
 
 echo Starting TextHunter Application...
 
@@ -13,6 +13,28 @@ set FrontendUrl=http://localhost:%FrontendPort%/
 REM Get the script directory
 set ScriptDir=%~dp0
 echo Working directory: %ScriptDir%
+cd /d "%ScriptDir%"
+
+REM Install Backend Dependencies
+echo Installing Backend dependencies...
+cd /d "%ScriptDir%backend"
+uv sync
+if errorlevel 1 (
+    echo Backend dependency installation failed!
+    pause
+    exit /b 1
+)
+cd /d "%ScriptDir%"
+
+REM Install Frontend Dependencies
+echo Installing Frontend dependencies...
+cd /d "%ScriptDir%frontend"
+npm install
+if errorlevel 1 (
+    echo Frontend dependency installation failed!
+    pause
+    exit /b 1
+)
 cd /d "%ScriptDir%"
 
 REM Start Backend

@@ -10,7 +10,6 @@ import LicenseCheck from "./components/LicenseCheck.vue";
 import RegexConfig from "./components/RegexConfig.vue";
 import ResultsTable from "./components/ResultsTable.vue";
 import SymbolDetector from "./components/SymbolDetector.vue";
-import ThemeToggle from "./components/base/ThemeToggle.vue";
 import type { MatchResult } from "./client/types.gen";
 import {
   exportExcel,
@@ -242,7 +241,6 @@ async function checkBackendStatusWithRetry() {
             </div>          </div>
 
           <div class="flex items-center gap-4">
-            <ThemeToggle />
             <a href="/docs/" target="_blank" class="btn-docs" title="Open Documentation">
               <span class="flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -3,7 +3,7 @@
 /* =============================================================================
    DESIGN TOKEN SYSTEM
    Semantic CSS custom properties with light/dark mode support.
-   Dark mode is default. Light mode activated via <html data-theme="light">.
+   Dark mode only.
    ============================================================================= */
 
 :root {
@@ -126,44 +126,6 @@
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* =============================================================================
-   LIGHT MODE
-   ============================================================================= */
-[data-theme="light"] {
-  --bg-page: #f8fafc;
-  --bg-base: #ffffff;
-  --bg-elevated: #ffffff;
-  --bg-sunken: #f1f5f9;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
-  --bg-input: #f1f5f9;
-  --bg-input-hover: #e2e8f0;
-  --bg-overlay: rgba(255, 255, 255, 0.9);
-  --bg-tooltip: #ffffff;
-
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-tertiary: #475569;
-  --text-muted: #94a3b8;
-  --text-disabled: #cbd5e1;
-  --text-inverse: #f8fafc;
-
-  --border-subtle: rgba(0, 0, 0, 0.04);
-  --border-default: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.12);
-  --border-focus: rgba(99, 102, 241, 0.4);
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12);
-  --shadow-accent: 0 4px 16px rgba(99, 102, 241, 0.2);
-
-  --canvas-box: #16a34a;
-  --canvas-preview: #d97706;
-  --canvas-text: #0f172a;
 }
 
 /* =============================================================================
@@ -388,10 +350,6 @@ select {
   appearance: none;
 }
 
-[data-theme="light"] select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-}
-
 /* Toggle switch — needs CSS for the checkbox hack */
 .toggle-input {
   position: absolute;
@@ -421,11 +379,6 @@ select {
   padding: 0.125rem 0.375rem;
   border-radius: var(--radius-sm);
   font-weight: 500;
-}
-
-[data-theme="light"] .match-highlight {
-  background: rgba(99, 102, 241, 0.12);
-  color: var(--accent-700);
 }
 
 /* Skeleton loading */

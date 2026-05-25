@@ -1,61 +1,79 @@
 @echo off
 REM TextHunter Launch Script
-REM This script installs dependencies and starts both backend and frontend servers
+REM Installs dependencies (if needed), starts backend + frontend, opens browser
 
-echo Starting TextHunter Application...
+echo ========================================
+echo   TextHunter - Starting Application
+echo ========================================
 
-REM Configuration
 set BackendPort=8000
 set FrontendPort=3000
 set BackendUrl=http://localhost:%BackendPort%
-set FrontendUrl=http://localhost:%FrontendPort%/
+set FrontendUrl=http://localhost:%FrontendPort%
 
-REM Get the script directory
-set ScriptDir=%~dp0
-echo Working directory: %ScriptDir%
-cd /d "%ScriptDir%"
+cd /d "%~dp0"
 
-REM Install Backend Dependencies
-echo Installing Backend dependencies...
-cd /d "%ScriptDir%backend"
-uv sync
-if errorlevel 1 (
-    echo Backend dependency installation failed!
-    pause
-    exit /b 1
+REM -----------------------------------------------------------------------
+REM Install dependencies (only if missing)
+REM -----------------------------------------------------------------------
+if not exist "backend\.venv" (
+    echo [1/4] Installing Backend dependencies...
+    cd /d "%~dp0backend"
+    uv sync || ( echo Backend install failed! & pause & exit /b 1 )
+    cd /d "%~dp0"
+) else (
+    echo [1/4] Backend dependencies already installed - skipping
 )
-cd /d "%ScriptDir%"
 
-REM Install Frontend Dependencies
-echo Installing Frontend dependencies...
-cd /d "%ScriptDir%frontend"
-npm install
-if errorlevel 1 (
-    echo Frontend dependency installation failed!
-    pause
-    exit /b 1
+if not exist "frontend\node_modules" (
+    echo [2/4] Installing Frontend dependencies...
+    cd /d "%~dp0frontend"
+    npm install || ( echo Frontend install failed! & pause & exit /b 1 )
+    cd /d "%~dp0"
+) else (
+    echo [2/4] Frontend dependencies already installed - skipping
 )
-cd /d "%ScriptDir%"
 
-REM Start Backend
-echo Starting Backend (FastAPI)...
-start "TextHunter Backend" cmd /k "cd /d "%ScriptDir%backend" && uv run python -m texthunter"
+REM -----------------------------------------------------------------------
+REM Start Backend (FastAPI)
+REM -----------------------------------------------------------------------
+echo [3/4] Starting Backend on %BackendUrl%...
+start "TextHunter Backend" cmd /k "cd /d "%~dp0backend" && uv run python -m texthunter"
 
-REM Wait for backend
+REM Wait for backend to be ready
 echo Waiting for backend to start...
-timeout /t 5 /nobreak >nul
+:wait-backend
+timeout /t 2 /nobreak >nul
+>nul 2>&1 curl -s "%BackendUrl%/health" && goto backend-ready
+echo   Backend not ready yet, retrying...
+goto wait-backend
+:backend-ready
+echo   Backend is ready!
 
-REM Start Frontend
-echo Starting Frontend (Vite)...
-start "TextHunter Frontend" cmd /k "cd /d "%ScriptDir%frontend" && npm run dev"
+REM -----------------------------------------------------------------------
+REM Start Frontend (Vite)
+REM -----------------------------------------------------------------------
+echo [4/4] Starting Frontend on %FrontendUrl%...
+start "TextHunter Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
 
-REM Wait for frontend
-timeout /t 3 /nobreak >nul
+REM Wait for frontend then open browser
+echo Waiting for frontend to start...
+:wait-frontend
+timeout /t 2 /nobreak >nul
+>nul 2>&1 curl -s "%FrontendUrl%" && goto frontend-ready
+echo   Frontend not ready yet, retrying...
+goto wait-frontend
+:frontend-ready
+echo   Frontend is ready!
 
+REM -----------------------------------------------------------------------
 REM Open browser
-echo Opening browser...
+REM -----------------------------------------------------------------------
+echo Opening browser at %FrontendUrl%
 start "" "%FrontendUrl%"
 
-echo Application launched!
+echo ========================================
+echo   Application launched!
 echo   Backend:  %BackendUrl%
 echo   Frontend: %FrontendUrl%
+echo ========================================

@@ -49,12 +49,12 @@ export async function guessRegex(
 export async function exportExcel(
   matches: Schemas["MatchResult"][],
   includeContext = true,
-): Promise<string | null> {
+): Promise<void> {
   const { blob, filename } = await httpClient.postBlob("/export", { matches, include_context: includeContext });
 
-  // Use desktop/web export utility
+  // Use web export utility
   const { exportExcelFile } = await import("@/utils/export.ts");
-  return exportExcelFile(blob, filename);
+  await exportExcelFile(blob, filename);
 }
 
 /**

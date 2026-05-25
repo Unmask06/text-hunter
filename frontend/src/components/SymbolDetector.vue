@@ -446,6 +446,7 @@ onUnmounted(() => {
               <option :value="200">200 (higher quality)</option>
               <option :value="300">300 (best)</option>
             </select>
+            <p class="text-xs text-slate-600">Controls PDF page rendering resolution for symbol detection</p>
           </div>
           <!-- Rotation -->
           <div class="space-y-1">

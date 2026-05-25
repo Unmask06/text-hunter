@@ -11,9 +11,6 @@ vi.mock('@/services/api.ts', () => ({
   guessRegex: vi.fn(),
 }));
 
-// Mock @tauri-apps/plugin-http to avoid import errors in jsdom
-vi.mock('@tauri-apps/plugin-http', () => ({ fetch: vi.fn() }));
-
 describe('RegexConfig', () => {
   let guessRegexMock: ReturnType<typeof vi.fn>;
 

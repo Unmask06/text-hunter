@@ -33,6 +33,7 @@ class MatchResult(BaseModel):
     page: int
     match_found: str
     context: str = Field(..., description="±20 chars around the match")
+    preset_name: str | None = Field(None, description="Name of the saved preset used for this extraction")
 
 
 class ExtractionResponse(BaseModel):

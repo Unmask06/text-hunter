@@ -13,9 +13,6 @@ vi.mock('@/api/client.ts', () => ({
   },
 }));
 
-// Mock @tauri-apps/plugin-http to prevent import errors
-vi.mock('@tauri-apps/plugin-http', () => ({ fetch: vi.fn() }));
-
 describe('API service', () => {
   let mockClient: { get: ReturnType<typeof vi.fn>; post: ReturnType<typeof vi.fn>; postBlob: ReturnType<typeof vi.fn> };
 

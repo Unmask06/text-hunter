@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { isTauri } from "@/api/client.ts";
 import { checkLicense, type LicenseStatus } from "@/services/license.ts";
 import { onBeforeUnmount, onMounted, ref } from "vue";
 
 // Web mode: render immediately without any loading screen.
-// Desktop mode: show loading while waiting for sidecar.
-const status = ref<LicenseStatus | null>(isTauri ? null : { valid: true, message: "" });
-const isLoading = ref(isTauri);
+const status = ref<LicenseStatus | null>({ valid: true, message: "" });
+const isLoading = ref(false);
 const error = ref("");
 const isOffline = ref(false);
 const retryCount = ref(0);
@@ -44,39 +42,14 @@ async function waitForSidecar(): Promise<LicenseStatus> {
 }
 
 onMounted(async () => {
-  if (!isTauri) {
-    // Web mode: app is already visible (status set synchronously above).
-    // Do a background version check — no blocking UI.
-    emit("validated", true);
-    try {
-      const result = await checkLicense();
-      status.value = result;
-    } catch {
-      // API unreachable — app already rendered, nothing to do
-    }
-    return;
-  }
-
-  // Desktop (Tauri) mode: wait for sidecar, then check version
+  // Web mode: app is already visible (status set synchronously above).
+  // Do a background version check — no blocking UI.
+  emit("validated", true);
   try {
     const result = await waitForSidecar();
     status.value = result;
-
-    if (!result.valid) {
-      error.value = result.message;
-      emit("validated", false);
-    } else {
-      isOffline.value = result.offline ?? false;
-      showSuccessModal.value = true;
-      successModalTimer = setTimeout(() => { showSuccessModal.value = false; }, 1500);
-      emit("validated", true);
-    }
-  } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : "Unknown error";
-    error.value = `Failed to connect to backend. Please ensure the app was installed correctly. ${errorMessage}`;
-    emit("validated", false);
-  } finally {
-    isLoading.value = false;
+  } catch {
+    // API unreachable — app already rendered, nothing to do
   }
 });
 </script>

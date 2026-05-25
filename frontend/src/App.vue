@@ -40,7 +40,6 @@ const isExtracting = ref(false);
 const isExporting = ref(false);
 const currentConfig = ref({ keywordRegex: "", fileIdentifierRegex: null as string | null });
 const isLoadingFiles = ref(false);
-const exportedFilePath = ref<string | null>(null);
 const backendStatus = ref<"online" | "offline">("offline");
 
 // Web Worker for PDF processing
@@ -168,10 +167,9 @@ async function handleExtract(config: { keywordRegex: string; fileIdentifierRegex
 async function handleExport() {
   if (!canExport.value) return;
   isExporting.value = true;
-  exportedFilePath.value = null;
 
   try {
-    exportedFilePath.value = await exportExcel(allMatches.value, true);
+    await exportExcel(allMatches.value, true);
   } catch (e) {
     console.error("Export error:", e);
     alert("Export failed: " + (e instanceof Error ? e.message : String(e)));
@@ -185,15 +183,8 @@ async function handleExport() {
  * Only available on desktop.
  */
 async function handleOpenFile() {
-  if (!exportedFilePath.value) return;
-
-  try {
-    const { openFile } = await import("@/utils/export.ts");
-    await openFile(exportedFilePath.value);
-  } catch (e) {
-    console.error("Failed to open file:", e);
-    alert("Failed to open file: " + (e instanceof Error ? e.message : String(e)));
-  }
+  // Web mode: file is downloaded automatically, no file path to open
+  console.log("File downloaded successfully");
 }
 
 function handleLicenseResult(valid: boolean) {
@@ -309,20 +300,6 @@ async function checkBackendStatusWithRetry() {
             </svg>
             Symbol Detection
             <span class="tab-badge">NEW</span>
-          </button>
-          <button
-            v-if="exportedFilePath"
-            class="btn-open-file"
-            @click="handleOpenFile"
-            title="Open exported Excel file"
-          >
-            <span class="flex items-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              <span class="sr-only">Open File</span>
-            </span>
           </button>
         </div>
       </nav>

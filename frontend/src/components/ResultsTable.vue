@@ -48,22 +48,22 @@ function highlightMatch(context, match) {
 </script>
 
 <template>
-  <div class="results-container">
+  <div class="bg-bg-card/80 backdrop-blur-xl border border-border-default rounded-2xl shadow-xl overflow-hidden">
     <!-- Header -->
-    <div class="header-section">
+    <div class="p-space-6 border-b border-border-subtle flex items-center justify-between bg-bg-input/20">
       <div>
-        <h2 class="results-title">Extraction Results</h2>
-        <p v-if="totalCount > 0" class="results-subtitle">
-          <span class="count-accent">{{ totalCount }} total matches found</span>
-          <span class="divider"> · </span>
-          <span class="view-info">Showing top {{ Math.min(10, matches.length) }}</span>
+        <h2 class="text-lg font-bold text-text-primary">Extraction Results</h2>
+        <p v-if="totalCount > 0" class="text-sm mt-space-1">
+          <span class="text-cyan-400 font-semibold">{{ totalCount }} total matches found</span>
+          <span class="text-text-muted mx-space-1"> · </span>
+          <span class="text-text-muted">Showing top {{ Math.min(10, matches.length) }}</span>
         </p>
-        <p v-else-if="matches.length > 0" class="results-subtitle">
+        <p v-else-if="matches.length > 0" class="text-sm mt-space-1 text-text-muted">
           {{ matches.length }} matches found
         </p>
       </div>
 
-      <div v-if="isLoading" class="loading-spinner">
+      <div v-if="isLoading" class="flex items-center gap-space-2 text-accent-400 text-sm font-medium">
         <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor"
@@ -75,42 +75,42 @@ function highlightMatch(context, match) {
     </div>
 
     <!-- Table Content -->
-    <div class="table-wrapper">
-      <div v-if="isLoading" class="table-loader">
-        <div class="flex flex-col items-center gap-4">
-          <svg class="w-10 h-10 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
+    <div class="overflow-x-auto">
+      <div v-if="isLoading" class="py-space-20 text-center">
+        <div class="flex flex-col items-center gap-space-4">
+          <svg class="w-10 h-10 animate-spin text-accent-500" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor"
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
             </path>
           </svg>
-          <p class="text-slate-400 font-medium">Loading results...</p>
+          <p class="text-text-secondary font-medium">Loading results...</p>
         </div>
       </div>
 
-      <table v-else-if="matches.length > 0" class="results-table">
+      <table v-else-if="matches.length > 0" class="w-full border-collapse">
         <thead>
           <tr>
-            <th>Source File</th>
-            <th>Project ID</th>
-            <th>Sheet No</th>
-            <th class="text-center">Page</th>
-            <th>Match Found</th>
-            <th>Context</th>
+            <th class="px-space-4 py-space-4 text-left font-bold uppercase text-[10px] tracking-widest text-text-muted border-b border-border-default bg-bg-input/30">Source File</th>
+            <th class="px-space-4 py-space-4 text-left font-bold uppercase text-[10px] tracking-widest text-text-muted border-b border-border-default bg-bg-input/30">Project ID</th>
+            <th class="px-space-4 py-space-4 text-left font-bold uppercase text-[10px] tracking-widest text-text-muted border-b border-border-default bg-bg-input/30">Sheet No</th>
+            <th class="px-space-4 py-space-4 text-center font-bold uppercase text-[10px] tracking-widest text-text-muted border-b border-border-default bg-bg-input/30">Page</th>
+            <th class="px-space-4 py-space-4 text-left font-bold uppercase text-[10px] tracking-widest text-text-muted border-b border-border-default bg-bg-input/30">Match Found</th>
+            <th class="px-space-4 py-space-4 text-left font-bold uppercase text-[10px] tracking-widest text-text-muted border-b border-border-default bg-bg-input/30">Context</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(match, index) in paginatedMatches" :key="index" class="table-row">
-            <td class="font-medium text-slate-100">{{ match.source_file }}</td>
-            <td>{{ match.project_id || '-' }}</td>
-            <td>{{ match.sheet_no || '-' }}</td>
-            <td class="text-center">{{ match.page }}</td>
-            <td>
-              <code class="match-pill">
+          <tr v-for="(match, index) in paginatedMatches" :key="index" class="transition-colors hover:bg-bg-input/40">
+            <td class="px-space-4 py-space-4 text-sm border-b border-border-subtle text-text-primary font-medium">{{ match.source_file }}</td>
+            <td class="px-space-4 py-space-4 text-sm border-b border-border-subtle text-text-secondary">{{ match.project_id || '-' }}</td>
+            <td class="px-space-4 py-space-4 text-sm border-b border-border-subtle text-text-secondary">{{ match.sheet_no || '-' }}</td>
+            <td class="px-space-4 py-space-4 text-sm border-b border-border-subtle text-text-secondary text-center">{{ match.page }}</td>
+            <td class="px-space-4 py-space-4 text-sm border-b border-border-subtle">
+              <code class="font-mono text-xs text-cyan-400 bg-cyan-400/10 px-space-2 py-space-1 rounded border border-cyan-400/20">
                 {{ match.match_found }}
               </code>
             </td>
-            <td class="max-w-xs truncate" :title="match.context">
+            <td class="px-space-4 py-space-4 text-sm border-b border-border-subtle text-text-secondary max-w-xs truncate" :title="match.context">
               <span v-html="highlightMatch(match.context, match.match_found)"></span>
             </td>
           </tr>
@@ -118,34 +118,51 @@ function highlightMatch(context, match) {
       </table>
 
       <!-- Empty State -->
-      <div v-else class="empty-results">
-        <div class="empty-icon-wrapper">
-          <svg class="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-else class="py-space-20 text-center">
+        <div class="w-20 h-20 mx-auto rounded-3xl bg-bg-input/50 flex items-center justify-center mb-space-6 border border-border-subtle">
+          <svg class="w-10 h-10 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
-        <p class="empty-text">No matches found</p>
-        <p class="empty-hint">
+        <p class="text-text-secondary font-semibold text-lg">No matches found</p>
+        <p class="text-text-muted text-sm mt-space-2">
           Upload PDFs and run extraction to see results
         </p>
       </div>
     </div>
 
     <!-- Pagination -->
-    <div v-if="totalPages > 1" class="pagination-footer">
-      <button class="nav-btn" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
+    <div v-if="totalPages > 1" class="p-space-4 border-t border-border-subtle flex items-center justify-between bg-bg-input/10">
+      <button
+        class="px-space-4 py-space-2 rounded-lg bg-bg-input text-text-secondary font-medium text-sm transition-all hover:bg-bg-input-hover hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed border border-border-default"
+        :disabled="currentPage === 1"
+        @click="goToPage(currentPage - 1)"
+      >
         Previous
       </button>
 
-      <div class="page-indicators">
-        <button v-for="page in totalPages" :key="page" :class="['page-btn', page === currentPage ? 'active' : '']"
-          @click="goToPage(page)">
+      <div class="flex items-center gap-space-2">
+        <button
+          v-for="page in totalPages"
+          :key="page"
+          :class="[
+            'w-9 h-9 rounded-lg transition-all text-sm font-medium border',
+            page === currentPage
+              ? 'bg-accent-600 text-white shadow-accent border-white/10'
+              : 'text-text-muted border-transparent hover:bg-white/5 hover:text-text-secondary',
+          ]"
+          @click="goToPage(page)"
+        >
           {{ page }}
         </button>
       </div>
 
-      <button class="nav-btn" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">
+      <button
+        class="px-space-4 py-space-2 rounded-lg bg-bg-input text-text-secondary font-medium text-sm transition-all hover:bg-bg-input-hover hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed border border-border-default"
+        :disabled="currentPage === totalPages"
+        @click="goToPage(currentPage + 1)"
+      >
         Next
       </button>
     </div>
@@ -155,105 +172,7 @@ function highlightMatch(context, match) {
 <style scoped>
 @reference "@/style.css";
 
-.results-container {
-  @apply bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden;
-}
-
-.header-section {
-  @apply p-5 border-b border-white/5 flex items-center justify-between bg-slate-800/20;
-}
-
-.results-title {
-  @apply text-lg font-bold text-slate-100;
-}
-
-.results-subtitle {
-  @apply text-sm mt-1;
-}
-
-.count-accent {
-  @apply text-cyan-400 font-semibold;
-}
-
-.divider {
-  @apply text-slate-700 mx-1;
-}
-
-.view-info {
-  @apply text-slate-500;
-}
-
-.loading-spinner {
-  @apply flex items-center gap-2 text-indigo-400 text-sm font-medium;
-}
-
-.table-wrapper {
-  @apply overflow-x-auto;
-}
-
-.table-loader {
-  @apply py-20 text-center;
-}
-
-.results-table {
-  @apply w-full border-collapse;
-}
-
-.results-table th {
-  @apply px-4 py-4 text-left font-bold uppercase text-[10px] tracking-widest text-slate-500 border-b border-white/10 bg-slate-800/30;
-}
-
-.table-row {
-  @apply transition-colors hover:bg-slate-800/40;
-}
-
-.table-row td {
-  @apply px-4 py-4 text-sm border-b border-white/5 text-slate-400;
-}
-
-.match-pill {
-  @apply font-mono text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/20;
-}
-
 :deep(.match-highlight) {
-  @apply px-1 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/20;
-}
-
-.empty-results {
-  @apply py-20 text-center;
-}
-
-.empty-icon-wrapper {
-  @apply w-20 h-20 mx-auto rounded-3xl bg-slate-800/50 flex items-center justify-center mb-6 border border-white/5;
-}
-
-.empty-text {
-  @apply text-slate-300 font-semibold text-lg;
-}
-
-.empty-hint {
-  @apply text-slate-500 text-sm mt-2;
-}
-
-.pagination-footer {
-  @apply p-4 border-t border-white/5 flex items-center justify-between bg-slate-800/10;
-}
-
-.nav-btn {
-  @apply px-4 py-2 rounded-lg bg-slate-800 text-slate-300 font-medium text-sm transition-all;
-  @apply hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed border border-white/5;
-}
-
-.page-indicators {
-  @apply flex items-center gap-2;
-}
-
-.page-btn {
-  @apply w-9 h-9 rounded-lg transition-all text-sm font-medium text-slate-400 border border-transparent;
-  @apply hover:bg-white/5 hover:text-slate-200;
-}
-
-.page-btn.active {
-  @apply bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 border-white/10;
+  @apply px-1 py-0.5 rounded bg-accent-500/20 text-accent-300 font-bold border border-accent-500/20;
 }
 </style>

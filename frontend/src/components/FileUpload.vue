@@ -22,11 +22,15 @@ const isDragOver = ref(false);
 const isUploading = ref(false);
 const errorMessage = ref('');
 
-const dropZoneClasses = computed(() => ({
-  'drop-zone': true,
-  'drag-over': isDragOver.value,
-  'disabled': props.disabled,
-}));
+const dropZoneClasses = computed(() => [
+  'border-2 border-dashed rounded-2xl p-space-8 text-center transition-all duration-base',
+  'bg-bg-card/50',
+  props.disabled
+    ? 'border-border-subtle cursor-not-allowed opacity-50'
+    : isDragOver.value
+      ? 'border-accent-500 bg-accent-500/5'
+      : 'border-border-default hover:border-accent-500/50',
+]);
 
 function formatFileSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
@@ -112,28 +116,35 @@ async function processFiles(files) {
 
 <template>
   <div :class="dropZoneClasses" @dragover="handleDragOver" @dragleave="handleDragLeave" @drop="handleDrop">
-    <div class="flex flex-col items-center gap-2">
+    <div class="flex flex-col items-center gap-space-3">
       <!-- Upload icon -->
-      <div class="upload-icon-container">
-        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="w-10 h-10 rounded-full bg-bg-input flex items-center justify-center">
+        <svg class="w-5 h-5 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
       </div>
 
       <div class="text-center">
-        <p class="text-slate-200 font-medium text-sm">
+        <p class="text-text-secondary font-medium text-sm">
           {{ props.disabled ? 'Upload disabled - backend offline' : (isUploading ? 'Uploading...' : 'Drop PDF files here') }}
         </p>
-        <p v-if="!props.disabled" class="text-slate-400 text-xs">or click to browse</p>
+        <p v-if="!props.disabled" class="text-text-muted text-xs mt-space-1">or click to browse</p>
       </div>
 
       <!-- Error message -->
-      <div v-if="errorMessage" class="error-message">
+      <div v-if="errorMessage" class="text-error text-xs bg-error-bg px-space-4 py-space-2 rounded-lg max-w-full">
         {{ errorMessage }}
       </div>
 
-      <label :class="{ 'btn-primary': !props.disabled, 'btn-disabled': props.disabled }">
+      <label
+        :class="[
+          'px-space-5 py-space-2 rounded-lg font-semibold text-sm cursor-pointer transition-all active:scale-95',
+          props.disabled
+            ? 'bg-bg-input text-text-disabled cursor-not-allowed'
+            : 'bg-accent-600 text-white hover:bg-accent-500 shadow-accent',
+        ]"
+      >
         <span>{{ props.disabled ? 'Disabled' : 'Select Files' }}</span>
         <input type="file" accept=".pdf" multiple :disabled="props.disabled" class="hidden"
           @change="handleFileSelect" />
@@ -141,38 +152,3 @@ async function processFiles(files) {
     </div>
   </div>
 </template>
-
-<style scoped>
-@reference "@/style.css";
-
-.drop-zone {
-  @apply border-2 border-dashed rounded-2xl p-4 text-center transition-all duration-300;
-  @apply border-slate-700/50 bg-slate-900/50 hover:border-indigo-500/50;
-}
-
-.drop-zone.drag-over {
-  @apply border-indigo-500 bg-indigo-500/10;
-}
-
-.drop-zone.disabled {
-  @apply border-slate-500/30 bg-slate-800/30 cursor-not-allowed opacity-50;
-}
-
-.upload-icon-container {
-  @apply w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center;
-}
-
-.error-message {
-  @apply text-red-500 text-xs bg-red-500/10 px-4 py-2 rounded-lg max-w-full;
-}
-
-.btn-primary {
-  @apply px-4 py-1.5 rounded-lg font-semibold text-white cursor-pointer text-sm;
-  @apply bg-indigo-600 hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-indigo-500/20;
-}
-
-.btn-disabled {
-  @apply px-4 py-1.5 rounded-lg font-semibold text-slate-400 cursor-not-allowed text-sm;
-  @apply bg-slate-700;
-}
-</style>

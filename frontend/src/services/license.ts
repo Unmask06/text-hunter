@@ -30,14 +30,13 @@ export interface LicenseStatus {
 export async function checkLicense(): Promise<LicenseStatus> {
   const { data, error } = await api.getLicenseCheck();
   if (error) throw new Error(`HTTP error: ${error}`);
-  return data as LicenseStatus;
+  return data as unknown as LicenseStatus;
 }
 
 /**
  * Clear cached license (useful for testing).
  */
 export async function clearLicense(): Promise<void> {
-  const { data, error } = await api.getLicenseClear();
+  const { error } = await api.getLicenseClear();
   if (error) throw new Error(`HTTP error: ${error}`);
-  return data as void;
 }

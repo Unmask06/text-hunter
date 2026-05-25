@@ -8,7 +8,8 @@
 - **Desktop**: Electron + electron-builder
 - **Build**: PyInstaller for Python, electron-builder for NSIS bundling
 - **Package Manager**: npm (frontend), uv (Python)
-- **HTTP Client**: Native `fetch()` API
+- **HTTP Client**: Hey API SDK (generated from OpenAPI spec)
+- **SDK Generation**: @hey-api/openapi-ts with operation_id-based method names
 - **Auto-Update**: electron-updater with GitHub Releases
 - **Target**: Windows x64 (NSIS installer + portable EXE)
 
@@ -27,6 +28,10 @@ npm run dev:all
 
 # Run sidecar only
 npm run dev:sidecar
+
+# Regenerate TypeScript SDK from FastAPI OpenAPI spec
+# (requires sidecar running on localhost:8000)
+npm run generate:sdk
 ```
 
 ### Building
@@ -73,7 +78,9 @@ Environment files:
 ### Frontend (Vue + Vite)
 - Source: `frontend/src/` directory
 - Dev server runs on port `3000`
-- API client uses native `fetch()` (works in Electron without CORS issues)
+- API client uses Hey API SDK (generated from OpenAPI spec)
+- SDK auto-generated in `frontend/src/client/` via `npm run generate:sdk`
+- All FastAPI routes must have `operation_id` for clean SDK method names
 - Three modes:
   - **Desktop (Electron)**: Direct `localhost:8000` (sidecar)
   - **Web Dev**: `/api` proxy to `localhost:8000`
@@ -95,6 +102,19 @@ Environment files:
 - Icons: `build/icons/icon.ico`
 - Auto-update from GitHub Releases
 
+### Hey API SDK Generation
+- Config: `openapi-ts.config.ts`
+- Output: `frontend/src/client/` (auto-generated, do not edit manually)
+- Generated files:
+  - `client.gen.ts` - Fetch client instance with base URL config
+  - `sdk.gen.ts` - `TextHunterClient` class with typed SDK methods
+  - `types.gen.ts` - TypeScript types from OpenAPI schemas
+  - `index.ts` - Re-exports
+- All FastAPI routes MUST have `operation_id` and `tags` for clean SDK method names
+- Binary endpoints (export) use native `fetch()` directly since SDK doesn't handle blobs
+- Regenerate after backend changes: `npm run generate:sdk` (requires sidecar running)
+- Auto-runs before `npm run build` via pre-build hook
+
 ## Important Notes
 
 1. **Sidecar rebuild required**: After any Python code change, run `npm run build:sidecar-winos`
@@ -102,6 +122,7 @@ Environment files:
 3. **Build order**: Always build sidecar THEN frontend THEN electron
 4. **Use npm**: All commands use npm (not bun/pnpm)
 5. **Environment switching**: API client automatically switches URLs based on `window.electronAPI`
+6. **SDK regeneration**: After any FastAPI route change (new endpoint, changed schema, new operation_id), regenerate the SDK with `npm run generate:sdk`
 
 ## Auto-Update Setup
 
@@ -142,7 +163,8 @@ text-hunter/
 │   ├── src/
 │   │   ├── components/         # Vue components
 │   │   ├── services/           # API and DB services
-│   │   └── api/                # API client and types
+│   │   ├── client/             # Generated Hey API SDK (auto-generated, do not edit)
+│   │   └── utils/              # Utility functions
 │   └── dist/                   # Built frontend (for Electron)
 ├── backend/                     # Python sidecar
 │   ├── texthunter/             # Python package
@@ -164,6 +186,7 @@ text-hunter/
 │   ├── TextHunter-0.x.x-Portable.exe  # Portable EXE
 │   └── latest.yml              # Auto-update metadata
 ├── electron-builder.yml         # Build configuration
+├── openapi-ts.config.ts         # Hey API SDK generation config
 ├── package.json                 # npm scripts
 └── AGENTS.md                    # This file
 ```

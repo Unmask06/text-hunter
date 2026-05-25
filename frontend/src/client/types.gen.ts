@@ -97,6 +97,22 @@ export type ExportRequest = {
 };
 
 /**
+ * ExtractionAllResponse
+ *
+ * Response from extract-all endpoint.
+ */
+export type ExtractionAllResponse = {
+    /**
+     * Matches
+     */
+    matches: Array<MatchResult>;
+    /**
+     * Total Count
+     */
+    total_count: number;
+};
+
+/**
  * ExtractionRequest
  *
  * Request payload for text extraction.
@@ -162,6 +178,22 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * HealthResponse
+ *
+ * Response from health check endpoint.
+ */
+export type HealthResponse = {
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Timestamp
+     */
+    timestamp: string;
 };
 
 /**
@@ -240,6 +272,12 @@ export type MatchResult = {
      * ±20 chars around the match
      */
     context: string;
+    /**
+     * Preset Name
+     *
+     * Name of the saved preset used for this extraction
+     */
+    preset_name?: string | null;
 };
 
 /**
@@ -540,10 +578,14 @@ export type GetConfigsError = GetConfigsErrors[keyof GetConfigsErrors];
 
 export type GetConfigsResponses = {
     /**
+     * Response Get Configs
+     *
      * Successful Response
      */
-    200: unknown;
+    200: Array<ConfigResponse>;
 };
+
+export type GetConfigsResponse = GetConfigsResponses[keyof GetConfigsResponses];
 
 export type PostConfigData = {
     body: ConfigCreate;
@@ -623,8 +665,10 @@ export type GetHealthResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: HealthResponse;
 };
+
+export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses];
 
 export type PostExtractData = {
     body: ExtractionRequest;
@@ -671,8 +715,10 @@ export type PostExtractAllResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ExtractionAllResponse;
 };
+
+export type PostExtractAllResponse = PostExtractAllResponses[keyof PostExtractAllResponses];
 
 export type PostGuessRegexData = {
     body: RegexGuessRequest;

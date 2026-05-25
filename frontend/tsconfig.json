@@ -25,7 +25,7 @@
 
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    // "exactOptionalPropertyTypes": true, // Disabled: conflicts with generated Hey API client code
 
     // Style Options
     // "noImplicitReturns": true,

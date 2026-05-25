@@ -97,7 +97,7 @@ async def save_config(
     return config
 
 
-@configs_router.get("/configs", operation_id="get_configs")
+@configs_router.get("/configs", response_model=list[ConfigResponse], operation_id="get_configs")
 async def list_configs(authorization: str | None = Header(default=None)):
     """List all saved configs for the current user."""
     user_id = await _get_user_id(authorization)

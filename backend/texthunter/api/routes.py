@@ -11,8 +11,10 @@ from texthunter.api.configs import configs_router
 from texthunter.api.schemas import (
     BoundingBox,
     ExportRequest,
+    ExtractionAllResponse,
     ExtractionRequest,
     ExtractionResponse,
+    HealthResponse,
     LegendExtractRequest,
     LegendExtractResponse,
     RegexGuessRequest,
@@ -44,11 +46,11 @@ router = APIRouter(tags=["extraction"])
 router.include_router(configs_router, prefix="/v1/history")
 
 
-@router.get("/health", operation_id="get_health", tags=["system"])
+@router.get("/health", response_model=HealthResponse, operation_id="get_health", tags=["system"])
 async def health_check():
     """Health check endpoint."""
     logger.debug("Health check requested")
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    return HealthResponse(status="healthy", timestamp=datetime.now().isoformat())
 
 
 @router.post("/extract", response_model=ExtractionResponse, operation_id="post_extract")
@@ -85,7 +87,7 @@ async def extract_data(payload: ExtractionRequest):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/extract-all", operation_id="post_extract_all")
+@router.post("/extract-all", response_model=ExtractionAllResponse, operation_id="post_extract_all")
 async def extract_all_data(payload: ExtractionRequest):
     """Run regex extraction and return all matches.
 
@@ -108,10 +110,10 @@ async def extract_all_data(payload: ExtractionRequest):
 
         logger.info("Full extraction complete: %d matches", len(matches))
 
-        return {
-            "matches": [m.model_dump() for m in matches],
-            "total_count": len(matches),
-        }
+        return ExtractionAllResponse(
+            matches=matches,
+            total_count=len(matches),
+        )
     except ValueError as e:
         logger.error("Extraction failed: %s", str(e))
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -146,7 +148,13 @@ async def generate_regex(payload: RegexGuessRequest):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/export", operation_id="post_export", tags=["export"])
+@router.post(
+    "/export",
+    operation_id="post_export",
+    tags=["export"],
+    response_class=StreamingResponse,
+    responses={200: {"content": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}}}},
+)
 async def export_excel(payload: ExportRequest):
     """Generate and stream an Excel file from match results."""
     logger.info("Export request: %d matches", len(payload.matches))
@@ -384,7 +392,13 @@ async def detect_symbols(payload: SymbolDetectRequest):
     )
 
 
-@router.post("/vision/export", operation_id="post_vision_export", tags=["vision"])
+@router.post(
+    "/vision/export",
+    operation_id="post_vision_export",
+    tags=["vision"],
+    response_class=StreamingResponse,
+    responses={200: {"content": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}}}},
+)
 async def export_vision_excel(payload: VisionExportRequest):
     """Export symbol detection results to Excel."""
     logger.info("Vision export: %d results", len(payload.results))

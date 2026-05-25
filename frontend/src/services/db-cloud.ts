@@ -8,23 +8,9 @@
  * Uses generated Hey API SDK for type-safe API calls.
  */
 import { api } from "@/services/api";
+import type { ConfigResponse } from "@/client/types.gen";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export interface Config {
-  id?: string;
-  name: string;
-  keyword_regex: string;
-  file_identifier_regex?: string | null;
-  created_at?: string;
-  modified?: string;
-}
-
-// ---------------------------------------------------------------------------
-// Configs
-// ---------------------------------------------------------------------------
+export type Config = ConfigResponse;
 
 /** Save or update a named regex config (upsert by name). */
 export async function saveConfig(

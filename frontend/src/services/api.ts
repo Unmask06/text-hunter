@@ -5,8 +5,10 @@
 import { client } from "@/client/client.gen";
 import { TextHunterClient } from "@/client/sdk.gen";
 import type {
+  ExtractionAllResponse,
   ExtractionRequest,
   ExtractionResponse,
+  HealthResponse,
   RegexGuessRequest,
   RegexGuessResponse,
   ExportRequest,
@@ -18,14 +20,12 @@ import type {
   SymbolDetectRequest,
   SymbolDetectResponse,
   SymbolDetectionResult,
-  SymbolTemplate,
-  BoundingBox,
+  VisionExportRequest,
 } from "@/client/types.gen";
 
-// Initialize SDK client with environment-aware base URL
 const getBaseUrl = (): string => {
-  const isElectron = typeof window !== 'undefined' && 
-    window.electronAPI !== undefined && 
+  const isElectron = typeof window !== 'undefined' &&
+    window.electronAPI !== undefined &&
     window.electronAPI.isElectron === true;
 
   if (isElectron) {
@@ -57,7 +57,7 @@ export async function extractMatches(
  */
 export async function extractAllMatches(
   payload: ExtractionRequest,
-): Promise<ExtractionResponse> {
+): Promise<ExtractionAllResponse> {
   const { data, error } = await api.postExtractAll({ body: payload });
   if (error) throw new Error(`HTTP error: ${error}`);
   return data!;
@@ -85,11 +85,17 @@ export async function exportExcel(
   matches: MatchResult[],
   includeContext = true,
 ): Promise<string | null> {
-  const response = await api.postExport({ body: { matches, include_context: includeContext } as ExportRequest });
-  if (response.error) throw new Error(`HTTP error: ${response.error}`);
-  
-  const blob = response.data as unknown as Blob;
-  const filename = "extraction_results.xlsx";
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/export`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ matches, include_context: includeContext }),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+
+  const blob = await response.blob();
+  const contentDisposition = response.headers.get("content-disposition");
+  const filename = contentDisposition?.match(/filename=(.+)/)?.[1] ?? "extraction_results.xlsx";
 
   const { exportExcelFile } = await import("@/utils/export.ts");
   return exportExcelFile(blob, filename);
@@ -98,13 +104,10 @@ export async function exportExcel(
 /**
  * Check backend health status.
  */
-export async function checkHealth(): Promise<{
-  status: string;
-  timestamp: string;
-}> {
+export async function checkHealth(): Promise<HealthResponse> {
   const { data, error } = await api.getHealth();
   if (error) throw new Error(`HTTP error: ${error}`);
-  return data as { status: string; timestamp: string };
+  return data!;
 }
 
 // ---------------------------------------------------------------------------
@@ -153,11 +156,17 @@ export async function detectSymbols(
 export async function exportVisionResults(
   results: SymbolDetectionResult[],
 ): Promise<void> {
-  const response = await api.postVisionExport({ body: { results } });
-  if (response.error) throw new Error(`HTTP error: ${response.error}`);
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/vision/export`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ results }),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
 
-  const blob = response.data as unknown as Blob;
-  const filename = "symbol_detection_results.xlsx";
+  const blob = await response.blob();
+  const contentDisposition = response.headers.get("content-disposition");
+  const filename = contentDisposition?.match(/filename=(.+)/)?.[1] ?? "symbol_detection_results.xlsx";
 
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");

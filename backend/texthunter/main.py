@@ -42,6 +42,14 @@ app = FastAPI(
     title="PDFHunter API",
     description="Extract text patterns and detect P&ID symbols from PDF documents",
     version=version("texthunter"),
+    openapi_tags=[
+        {"name": "system", "description": "System endpoints (health, connect, license)"},
+        {"name": "extraction", "description": "Text extraction from PDF content"},
+        {"name": "regex", "description": "Regex pattern generation and testing"},
+        {"name": "export", "description": "Excel export functionality"},
+        {"name": "vision", "description": "P&ID symbol detection and vision processing"},
+        {"name": "configs", "description": "Saved regex configuration management"},
+    ],
 )
 
 app.add_middleware(
@@ -65,7 +73,7 @@ async def _startup():
     await init_storage()
 
 
-@app.get("/")
+@app.get("/", operation_id="get_root", tags=["system"])
 async def root() -> dict[str, str]:
     """Root endpoint with API info."""
     logger.debug("Root endpoint accessed")
@@ -76,7 +84,7 @@ async def root() -> dict[str, str]:
     }
 
 
-@app.get("/v1/connect")
+@app.get("/v1/connect", operation_id="get_connect", tags=["system"])
 async def connect() -> dict:
     """Return connection info for Tauri sidecar."""
     return {
@@ -89,7 +97,7 @@ async def connect() -> dict:
     }
 
 
-@app.get("/v1/license/check")
+@app.get("/v1/license/check", operation_id="get_license_check", tags=["system"])
 async def check_license() -> dict:
     """Check local version against the external API.
 
@@ -100,7 +108,7 @@ async def check_license() -> dict:
     return await asyncio.to_thread(validate_license)
 
 
-@app.get("/v1/license/clear")
+@app.get("/v1/license/clear", operation_id="get_license_clear", tags=["system"])
 async def clear_license_endpoint() -> dict:
     """Clear cached license (for testing).
 

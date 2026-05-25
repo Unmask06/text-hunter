@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { isTauri } from "@/api/client.ts";
 import { checkLicense, type LicenseStatus } from "@/services/license.ts";
 import { onBeforeUnmount, onMounted, ref } from "vue";
 
+const isElectron = typeof window !== 'undefined' && 
+  window.electronAPI !== undefined && 
+  window.electronAPI.isElectron === true;
+
 // Web mode: render immediately without any loading screen.
 // Desktop mode: show loading while waiting for sidecar.
-const status = ref<LicenseStatus | null>(isTauri ? null : { valid: true, message: "" });
-const isLoading = ref(isTauri);
+const status = ref<LicenseStatus | null>(isElectron ? null : { valid: true, message: "" });
+const isLoading = ref(isElectron);
 const error = ref("");
 const isOffline = ref(false);
 const retryCount = ref(0);
@@ -44,7 +47,7 @@ async function waitForSidecar(): Promise<LicenseStatus> {
 }
 
 onMounted(async () => {
-  if (!isTauri) {
+  if (!isElectron) {
     // Web mode: app is already visible (status set synchronously above).
     // Do a background version check — no blocking UI.
     emit("validated", true);
@@ -57,7 +60,7 @@ onMounted(async () => {
     return;
   }
 
-  // Desktop (Tauri) mode: wait for sidecar, then check version
+  // Desktop (Electron) mode: wait for sidecar, then check version
   try {
     const result = await waitForSidecar();
     status.value = result;

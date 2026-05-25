@@ -40,18 +40,18 @@ from texthunter.core.vision import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(tags=["extraction"])
 router.include_router(configs_router, prefix="/v1/history")
 
 
-@router.get("/health")
+@router.get("/health", operation_id="get_health", tags=["system"])
 async def health_check():
     """Health check endpoint."""
     logger.debug("Health check requested")
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 
-@router.post("/extract", response_model=ExtractionResponse)
+@router.post("/extract", response_model=ExtractionResponse, operation_id="post_extract")
 async def extract_data(payload: ExtractionRequest):
     """Run regex extraction on provided text content.
 
@@ -85,7 +85,7 @@ async def extract_data(payload: ExtractionRequest):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/extract-all")
+@router.post("/extract-all", operation_id="post_extract_all")
 async def extract_all_data(payload: ExtractionRequest):
     """Run regex extraction and return all matches.
 
@@ -117,7 +117,7 @@ async def extract_all_data(payload: ExtractionRequest):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/guess-regex", response_model=RegexGuessResponse)
+@router.post("/guess-regex", response_model=RegexGuessResponse, operation_id="post_guess_regex", tags=["regex"])
 async def generate_regex(payload: RegexGuessRequest):
     """Generate a regex pattern from example strings.
 
@@ -146,7 +146,7 @@ async def generate_regex(payload: RegexGuessRequest):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/export")
+@router.post("/export", operation_id="post_export", tags=["export"])
 async def export_excel(payload: ExportRequest):
     """Generate and stream an Excel file from match results."""
     logger.info("Export request: %d matches", len(payload.matches))
@@ -178,7 +178,7 @@ async def export_excel(payload: ExportRequest):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/vision/render-page", response_model=RenderPageResponse)
+@router.post("/vision/render-page", response_model=RenderPageResponse, operation_id="post_vision_render_page", tags=["vision"])
 async def render_pdf_page(payload: RenderPageRequest):
     """Render a single PDF page to a base64 PNG.
 
@@ -219,7 +219,7 @@ async def render_pdf_page(payload: RenderPageRequest):
     )
 
 
-@router.post("/vision/extract-legend", response_model=LegendExtractResponse)
+@router.post("/vision/extract-legend", response_model=LegendExtractResponse, operation_id="post_vision_extract_legend", tags=["vision"])
 async def extract_legend(payload: LegendExtractRequest):
     """Extract symbol templates from a legend page image.
 
@@ -290,7 +290,7 @@ async def extract_legend(payload: LegendExtractRequest):
     )
 
 
-@router.post("/vision/detect-symbols", response_model=SymbolDetectResponse)
+@router.post("/vision/detect-symbols", response_model=SymbolDetectResponse, operation_id="post_vision_detect_symbols", tags=["vision"])
 async def detect_symbols(payload: SymbolDetectRequest):
     """Detect P&ID symbols across all pages of a target PDF.
 
@@ -384,7 +384,7 @@ async def detect_symbols(payload: SymbolDetectRequest):
     )
 
 
-@router.post("/vision/export")
+@router.post("/vision/export", operation_id="post_vision_export", tags=["vision"])
 async def export_vision_excel(payload: VisionExportRequest):
     """Export symbol detection results to Excel."""
     logger.info("Vision export: %d results", len(payload.results))

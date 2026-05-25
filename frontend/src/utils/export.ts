@@ -3,10 +3,13 @@
  * Handles saving files to Downloads folder and opening files with default application.
  */
 
-import { isTauri } from "@/api/client.ts";
 import { path } from "@tauri-apps/api";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { open } from "@tauri-apps/plugin-shell";
+
+const isElectron = typeof window !== 'undefined' && 
+  window.electronAPI !== undefined && 
+  window.electronAPI.isElectron === true;
 
 /**
  * Save a blob to the Downloads folder.
@@ -45,7 +48,7 @@ export async function openFile(filePath: string): Promise<void> {
  * @returns File path if desktop, null if web
  */
 export async function exportExcelFile(blob: Blob, filename: string): Promise<string | null> {
-  if (isTauri) {
+  if (isElectron) {
     // Desktop: save directly to Downloads folder
     return saveToDownloads(filename, blob);
   } else {

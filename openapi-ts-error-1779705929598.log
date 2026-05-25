@@ -1,0 +1,54 @@
+[2026-05-25T10:45:29.598Z] Error during event "operation"
+Plugin: @hey-api/sdk
+Arguments: [
+  {
+    "_path": [
+      "paths",
+      "/health",
+      "get"
+    ],
+    "pointer": "#/paths/~1health/get",
+    "method": "get",
+    "operation": {
+      "id": "getHealth",
+      "method": "get",
+      "path": "/health",
+      "operationId": "health_check_health_get",
+      "description": "Health check endpoint.",
+      "summary": "Health Check",
+      "responses": {
+        "200": {
+          "mediaType": "application/json",
+          "schema": {
+            "description": "Successful Response",
+            "type": "unknown"
+          }
+        }
+      }
+    },
+    "path": "/health",
+    "type": "operation"
+  }
+]
+
+Error: Cannot insert data without path.
+Stack:
+Error: Cannot insert data without path.
+    at StructureModel.insert (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/codegen-core/dist/index.mjs:1746:46)
+    at plugin.forEach.order (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/openapi-ts/dist/init-D3VuY80Z.mjs:6298:13)
+    at file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/shared/dist/index.mjs:1988:5
+    at walkDeclarations (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/shared/dist/index.mjs:1570:50)
+    at walk (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/shared/dist/index.mjs:1678:9)
+    at PluginInstance.forEach (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/shared/dist/index.mjs:1927:3)
+    at handlerV1$3 (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/openapi-ts/dist/init-D3VuY80Z.mjs:6297:9)
+    at PluginInstance.handler$11 [as handler] (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/openapi-ts/dist/init-D3VuY80Z.mjs:6325:30)
+    at PluginInstance.run (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/shared/dist/index.mjs:2082:14)
+    at generateOutput (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/openapi-ts/dist/src-BeNy9O9X.mjs:30:63)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async createClient$1 (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/openapi-ts/dist/src-BeNy9O9X.mjs:152:25)
+    at async file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/openapi-ts/dist/src-BeNy9O9X.mjs:212:12
+    at async Promise.all (index 0)
+    at async createClient (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/openapi-ts/dist/src-BeNy9O9X.mjs:210:21)
+    at async Command.<anonymous> (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/openapi-ts/dist/run.mjs:35:8)
+    at async Command.parseAsync (C:\Users\PrasannaPalanivel\Documents\Code\worktrees\text-hunter\rainy-apricot\text-hunter\node_modules\@hey-api\openapi-ts\node_modules\commander\lib\command.js:1122:5)
+    at async runCli (file:///C:/Users/PrasannaPalanivel/Documents/Code/worktrees/text-hunter/rainy-apricot/text-hunter/node_modules/@hey-api/openapi-ts/dist/run.mjs:39:3)

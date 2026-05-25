@@ -100,6 +100,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install backend dependencies
+        run: cd backend && uv sync --frozen
+
       - name: Install frontend dependencies
         run: cd frontend && npm ci
 

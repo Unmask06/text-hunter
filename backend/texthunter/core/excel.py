@@ -36,6 +36,7 @@ def build_dataframe(
             "Sheet No": match.sheet_no or "",
             "Page": match.page,
             "Match Found": match.match_found,
+            "Preset": match.preset_name or "",
         }
         if include_context:
             row["Context (± 20 chars)"] = match.context

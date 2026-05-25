@@ -103,54 +103,32 @@ jobs:
       - name: Install frontend dependencies
         run: cd frontend && npm ci
 
-      - name: Build frontend for desktop
-        run: cd frontend && npm run build:desktop
-
-      - name: Install backend dependencies
-        run: cd backend && pip install uv && uv pip install --system .
-
-      - name: Get version from pyproject.toml
+      - name: Get version from package.json
         id: get-version
         run: |
-          $version = (Get-Content backend/pyproject.toml | Select-String 'version = "(.*?)"').Matches.Groups[1].Value
+          $version = (Get-Content package.json | Select-String '"version": "(.*?)"').Matches.Groups[1].Value
           echo "version=$version" >> $env:GITHUB_OUTPUT
 
-      - name: Build PyInstaller sidecar
-        run: |
-          cd backend
-          pyinstaller main-x86_64-pc-windows-msvc.spec --clean --noconfirm
-
-      - name: Copy sidecar to Tauri
-        run: |
-          Copy-Item backend/dist/main-x86_64-pc-windows-msvc.exe src-tauri/bin/api/main-x86_64-pc-windows-msvc.exe
-          Copy-Item backend/dist/main-x86_64-pc-windows-msvc.exe src-tauri/bin/api/main.exe
-
-      - name: Install Rust (stable)
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-pc-windows-msvc
-
-      - name: Build Tauri app
+      - name: Build desktop app
         run: npm run build:desktop
-
-      - name: Create portable ZIP
-        run: |
-          $portableDir = New-Item -ItemType Directory -Path "TextHunter-portable"
-          Copy-Item src-tauri/target/release/TextHunter.exe $portableDir/
-          Copy-Item src-tauri/bin/api/main-x86_64-pc-windows-msvc.exe $portableDir/main.exe
-          Compress-Archive -Path $portableDir/* -DestinationPath "TextHunter-portable-${{ steps.get-version.outputs.version }}.zip"
 
       - name: Upload NSIS installer
         uses: actions/upload-artifact@v4
         with:
           name: nsis-installer
-          path: src-tauri/target/release/bundle/nsis/TextHunter_*.exe
+          path: release/TextHunter-*-setup.exe
 
-      - name: Upload portable ZIP
+      - name: Upload portable EXE
         uses: actions/upload-artifact@v4
         with:
-          name: portable-zip
-          path: TextHunter-portable-*.zip
+          name: portable-exe
+          path: release/TextHunter-*-Portable.exe
+
+      - name: Upload latest.yml
+        uses: actions/upload-artifact@v4
+        with:
+          name: latest-yml
+          path: release/latest.yml
 
   # 4. Create GitHub Release with desktop assets (ALWAYS runs)
   create-release:
@@ -165,10 +143,16 @@ jobs:
           name: nsis-installer
           path: ./artifacts/
 
-      - name: Download portable ZIP
+      - name: Download portable EXE
         uses: actions/download-artifact@v4
         with:
-          name: portable-zip
+          name: portable-exe
+          path: ./artifacts/
+
+      - name: Download latest.yml
+        uses: actions/download-artifact@v4
+        with:
+          name: latest-yml
           path: ./artifacts/
 
       - name: Create GitHub Release

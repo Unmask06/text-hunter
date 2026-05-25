@@ -1,13 +1,7 @@
 /**
  * Tests for the HTTP client (retry logic, error handling, environment detection).
- * The Tauri plugin import is mocked so tests run in jsdom without a Tauri runtime.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// Mock @tauri-apps/plugin-http before importing client
-vi.mock('@tauri-apps/plugin-http', () => ({
-  fetch: vi.fn(),
-}));
 
 // Mock import.meta.env
 vi.stubGlobal('import', { meta: { env: { VITE_API_URL: '/api' } } });

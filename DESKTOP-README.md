@@ -28,7 +28,6 @@ Download the latest installer from the [Releases page](https://github.com/Unmask
 - Node.js 18+
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
-- Rust (for Tauri)
 
 ### Setup
 
@@ -36,30 +35,24 @@ Download the latest installer from the [Releases page](https://github.com/Unmask
 # Install all dependencies
 npm run install-reqs
 
-# Build Python sidecar
-npm run build:sidecar-winos
-
 # Run in development mode
-npm run tauri dev
+npm run dev
 ```
 
 ### Build from Source
 
 ```bash
-# Build sidecar
-npm run build:sidecar-winos
-
 # Build production installer
-npm run tauri build
+npm run build:desktop
 ```
 
-Output: `src-tauri/target/release/bundle/nsis/TextHunter_0.1.0_x64-setup.exe`
+Output: `release/TextHunter-0.x.x-setup.exe`
 
 ## Architecture
 
 - **Frontend**: Vue 3 + Vite + TypeScript + Tailwind CSS
 - **Backend**: Python FastAPI (bundled as PyInstaller sidecar)
-- **Desktop Framework**: Tauri v2 (Rust-based)
+- **Desktop Framework**: Electron + electron-builder
 
 See `AGENTS.md` for detailed development instructions.
 

@@ -8,7 +8,7 @@
     "dev:all": "concurrently \"npm run docs:build:desktop && vite\" \"vitepress dev docs\"",
     "dev:web": "cross-env VITE_BUILD_TARGET=web vitepress build docs --base /products/text-hunter/docs/ && vite",
     "build": "npm run docs:build:desktop && vite build",
-    "build:web": "npm run docs:build:web && vite build --mode production",
+    "build:web": "cross-env VITE_BUILD_TARGET=web vite build --mode production && npm run docs:build:web",
     "build:desktop": "npm run docs:build:desktop && vite build",
     "preview": "vite preview",
     "docs:dev": "vitepress dev docs",

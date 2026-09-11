@@ -33,7 +33,7 @@ jobs:
           echo "frontend=${{ steps.filter.outputs.frontend || 'true' }}" >> "$GITHUB_OUTPUT"
           echo "backend=${{ steps.filter.outputs.backend || 'true' }}" >> "$GITHUB_OUTPUT"
 
-  # 2. Build frontend (conditional on changes)
+  # 2. Build frontend for web deployment (conditional on changes)
   build-frontend:
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true'
@@ -43,11 +43,29 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: cd frontend && npm ci && npm run build
+      - run: cd frontend && npm ci && npm run build:web
+
+      # Ephemeral artifact — used by XergiZ product-update.yml for immediate deploy
       - uses: actions/upload-artifact@v4
         with:
           name: texthunter-dist
           path: frontend/dist/
+
+      # Persistent release asset — survives beyond 90-day artifact retention
+      - name: Package web dist for persistent release
+        run: |
+          cd frontend
+          tar -czf texthunter-web-dist.tar.gz -C dist .
+
+      - name: Upload to persistent latest-web release
+        run: |
+          gh release delete latest-web --yes --cleanup-tag 2>/dev/null || true
+          gh release create latest-web frontend/texthunter-web-dist.tar.gz \
+            --title "Latest Web Build" \
+            --notes "Auto-generated web build for XergiZ integration. Do not delete." \
+            --prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # 2.1 Notify xergiz frontend (conditional on changes)
   notify-xergiz-frontend:

@@ -74,7 +74,11 @@ export default defineConfig({
   base: process.env.VITE_BUILD_TARGET === 'web' ? '/products/text-hunter/' : './',
 
   build: {
-    outDir: 'dist',
+    // Web: nested under products/ so artifact merges cleanly into xergiz dist
+    // Desktop: flat dist/ for Electron packaging
+    outDir: process.env.VITE_BUILD_TARGET === 'web'
+      ? 'dist/products/text-hunter'
+      : 'dist',
   },
 
   server: {

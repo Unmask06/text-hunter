@@ -35,7 +35,43 @@ const getBaseUrl = (): string => {
   return import.meta.env.VITE_API_URL || "/api";
 };
 
-client.setConfig({ baseUrl: getBaseUrl() });
+/**
+ * Retrieve the Supabase access token from the XergiZ auth session.
+ * On the web, xergiz.com and xergiz.com/products/text-hunter/ share the same
+ * origin, so sessionStorage is accessible.  In Electron (desktop) mode the
+ * local sidecar needs no auth, so we return null.
+ */
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  if ((window as any).electronAPI?.isElectron) return null;
+
+  try {
+    const cached = sessionStorage.getItem('xergiz_auth_session');
+    if (cached) {
+      const session = JSON.parse(cached);
+      return session?.access_token ?? null;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+/** Build auth headers for native fetch calls (export endpoints). */
+function authHeaders(): Record<string, string> {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+client.setConfig({
+  baseUrl: getBaseUrl(),
+});
+
+client.interceptors.request.use((request) => {
+  const token = getAuthToken();
+  if (token) {
+    request.headers.set('Authorization', `Bearer ${token}`);
+  }
+  return request;
+});
 
 const api = new TextHunterClient();
 
@@ -88,7 +124,7 @@ export async function exportExcel(
   const baseUrl = getBaseUrl();
   const response = await fetch(`${baseUrl}/export`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ matches, include_context: includeContext }),
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
@@ -159,7 +195,7 @@ export async function exportVisionResults(
   const baseUrl = getBaseUrl();
   const response = await fetch(`${baseUrl}/vision/export`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ results }),
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);

@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force build web and desktop'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: write  # Needed for creating releases
@@ -30,8 +36,13 @@ jobs:
       - name: Set change outputs
         id: set-changes
         run: |
-          echo "frontend=${{ steps.filter.outputs.frontend || 'true' }}" >> "$GITHUB_OUTPUT"
-          echo "backend=${{ steps.filter.outputs.backend || 'true' }}" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "frontend=${{ steps.filter.outputs.frontend }}" >> "$GITHUB_OUTPUT"
+            echo "backend=${{ steps.filter.outputs.backend }}" >> "$GITHUB_OUTPUT"
+          fi
 
   # 2. Build frontend for web deployment (conditional on changes)
   build-frontend:
@@ -59,7 +70,7 @@ jobs:
 
       - name: Upload to persistent latest-web release
         run: |
-          gh release delete latest-web --yes --cleanup-tag 2>/dev/null || true
+          gh release upload latest-web frontend/texthunter-web-dist.tar.gz --clobber 2>/dev/null || \
           gh release create latest-web frontend/texthunter-web-dist.tar.gz \
             --title "Latest Web Build" \
             --notes "Auto-generated web build for XergiZ integration. Do not delete." \
@@ -73,7 +84,9 @@ jobs:
     if: needs.detect-changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: peter-evans/repository-dispatch@v3
+      - name: Send dispatch to XergiZ frontend
+        uses: peter-evans/repository-dispatch@v3
+        continue-on-error: true
         with:
           token: ${{ secrets.XERGIZ_TRIGGER_TOKEN }}
           repository: XergiZ/xergiz
@@ -92,7 +105,9 @@ jobs:
     if: needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: peter-evans/repository-dispatch@v3
+      - name: Send dispatch to XergiZ backend
+        uses: peter-evans/repository-dispatch@v3
+        continue-on-error: true
         with:
           token: ${{ secrets.XERGIZ_TRIGGER_TOKEN }}
           repository: XergiZ/xergiz

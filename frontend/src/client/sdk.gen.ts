@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteConfigData, DeleteConfigErrors, DeleteConfigResponses, GetConfigsData, GetConfigsErrors, GetConfigsResponses, GetConnectData, GetConnectResponses, GetHealthData, GetHealthResponses, GetLicenseCheckData, GetLicenseCheckResponses, GetLicenseClearData, GetLicenseClearResponses, GetRootData, GetRootResponses, PostConfigData, PostConfigErrors, PostConfigResponses, PostExportData, PostExportErrors, PostExportResponses, PostExtractAllData, PostExtractAllErrors, PostExtractAllResponses, PostExtractData, PostExtractErrors, PostExtractResponses, PostGuessRegexData, PostGuessRegexErrors, PostGuessRegexResponses, PostVisionDetectSymbolsData, PostVisionDetectSymbolsErrors, PostVisionDetectSymbolsResponses, PostVisionExportData, PostVisionExportErrors, PostVisionExportResponses, PostVisionExtractLegendData, PostVisionExtractLegendErrors, PostVisionExtractLegendResponses, PostVisionRenderPageData, PostVisionRenderPageErrors, PostVisionRenderPageResponses } from './types.gen';
+import type { DeleteConfigData, DeleteConfigErrors, DeleteConfigResponses, GetConfigsData, GetConfigsResponses, GetConnectData, GetConnectResponses, GetHealthData, GetHealthResponses, GetLicenseCheckData, GetLicenseCheckResponses, GetLicenseClearData, GetLicenseClearResponses, GetRootData, GetRootResponses, PostConfigData, PostConfigErrors, PostConfigResponses, PostExportData, PostExportErrors, PostExportResponses, PostExtractAllData, PostExtractAllErrors, PostExtractAllResponses, PostExtractData, PostExtractErrors, PostExtractResponses, PostGuessRegexData, PostGuessRegexErrors, PostGuessRegexResponses, PostVisionDetectSymbolsData, PostVisionDetectSymbolsErrors, PostVisionDetectSymbolsResponses, PostVisionExportData, PostVisionExportErrors, PostVisionExportResponses, PostVisionExtractLegendData, PostVisionExtractLegendErrors, PostVisionExtractLegendResponses, PostVisionRenderPageData, PostVisionRenderPageErrors, PostVisionRenderPageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -63,7 +63,7 @@ export class TextHunterClient extends HeyApiClient {
      * List all saved configs for the current user.
      */
     public getConfigs<ThrowOnError extends boolean = false>(options?: Options<GetConfigsData, ThrowOnError>) {
-        return (options?.client ?? this.client).get<GetConfigsResponses, GetConfigsErrors, ThrowOnError>({ url: '/v1/history/configs', ...options });
+        return (options?.client ?? this.client).get<GetConfigsResponses, unknown, ThrowOnError>({ url: '/v1/history/configs', ...options });
     }
     
     /**

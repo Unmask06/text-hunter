@@ -47,7 +47,7 @@ def parse_version(version_str: str) -> tuple:
 def get_latest_version() -> tuple | None:
     """Fetch latest version from external API."""
     try:
-        response = requests.get(VERSION_API_URL, timeout=10)
+        response = requests.get(VERSION_API_URL, timeout=3)
         response.raise_for_status()
         data = response.json()
         version_str = data.get("version", "0.0.0")

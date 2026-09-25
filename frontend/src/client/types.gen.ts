@@ -556,25 +556,10 @@ export type VisionExportRequest = {
 
 export type GetConfigsData = {
     body?: never;
-    headers?: {
-        /**
-         * Authorization
-         */
-        authorization?: string | null;
-    };
     path?: never;
     query?: never;
     url: '/v1/history/configs';
 };
-
-export type GetConfigsErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetConfigsError = GetConfigsErrors[keyof GetConfigsErrors];
 
 export type GetConfigsResponses = {
     /**
@@ -589,12 +574,6 @@ export type GetConfigsResponse = GetConfigsResponses[keyof GetConfigsResponses];
 
 export type PostConfigData = {
     body: ConfigCreate;
-    headers?: {
-        /**
-         * Authorization
-         */
-        authorization?: string | null;
-    };
     path?: never;
     query?: never;
     url: '/v1/history/configs';
@@ -620,12 +599,6 @@ export type PostConfigResponse = PostConfigResponses[keyof PostConfigResponses];
 
 export type DeleteConfigData = {
     body?: never;
-    headers?: {
-        /**
-         * Authorization
-         */
-        authorization?: string | null;
-    };
     path: {
         /**
          * Config Id

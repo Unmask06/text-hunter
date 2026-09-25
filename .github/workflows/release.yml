@@ -5,8 +5,8 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
-      force_build:
-        description: 'Force build web and desktop'
+      build_desktop:
+        description: 'Build desktop installer and release (Windows)'
         required: false
         type: boolean
         default: true
@@ -18,36 +18,30 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # 1. Detect changed paths (for notification only)
+  # 1. Detect changed paths (push only)
   detect-changes:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
-      frontend: ${{ steps.set-changes.outputs.frontend }}
-      backend: ${{ steps.set-changes.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
-        if: github.event_name == 'push'
         id: filter
         with:
           filters: |
             frontend: frontend/**
             backend: backend/**
-      - name: Set change outputs
-        id: set-changes
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "frontend=true" >> "$GITHUB_OUTPUT"
-            echo "backend=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "frontend=${{ steps.filter.outputs.frontend }}" >> "$GITHUB_OUTPUT"
-            echo "backend=${{ steps.filter.outputs.backend }}" >> "$GITHUB_OUTPUT"
-          fi
 
-  # 2. Build frontend for web deployment (conditional on changes)
+  # 2. Build frontend for web deployment
   build-frontend:
     needs: detect-changes
-    if: needs.detect-changes.outputs.frontend == 'true'
+    if: |
+      always() &&
+      !cancelled() &&
+      !failure() &&
+      (github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.frontend == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -78,10 +72,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # 2.1 Notify xergiz frontend (conditional on changes)
+  # 2.1 Notify xergiz frontend
   notify-xergiz-frontend:
-    needs: [detect-changes, build-frontend]
-    if: needs.detect-changes.outputs.frontend == 'true'
+    needs: build-frontend
     runs-on: ubuntu-latest
     steps:
       - name: Send dispatch to XergiZ frontend
@@ -99,10 +92,14 @@ jobs:
               "repo": "${{ github.repository }}"
             }
 
-  # 2.2 Notify xergiz backend (conditional on changes)
+  # 2.2 Notify xergiz backend
   notify-xergiz-backend:
     needs: detect-changes
-    if: needs.detect-changes.outputs.backend == 'true'
+    if: |
+      always() &&
+      !cancelled() &&
+      !failure() &&
+      (github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.backend == 'true')
     runs-on: ubuntu-latest
     steps:
       - name: Send dispatch to XergiZ backend
@@ -120,8 +117,9 @@ jobs:
               "repo": "${{ github.repository }}"
             }
 
-  # 3. Build desktop app (Windows) - ALWAYS runs on push to main
+  # 3. Build desktop app (Windows)
   build-desktop:
+    if: github.event_name == 'push' || github.event.inputs.build_desktop != false
     runs-on: windows-2025
     outputs:
       version: ${{ steps.get-version.outputs.version }}

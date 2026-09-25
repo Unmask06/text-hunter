@@ -75,6 +75,10 @@ jobs:
   # 2.1 Notify xergiz frontend
   notify-xergiz-frontend:
     needs: build-frontend
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.build-frontend.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Send dispatch to XergiZ frontend
@@ -119,7 +123,7 @@ jobs:
 
   # 3. Build desktop app (Windows)
   build-desktop:
-    if: github.event_name == 'push' || github.event.inputs.build_desktop != false
+    if: github.event_name == 'push' || (inputs.build_desktop == true || inputs.build_desktop == 'true')
     runs-on: windows-2025
     outputs:
       version: ${{ steps.get-version.outputs.version }}

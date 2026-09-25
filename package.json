@@ -5,7 +5,7 @@
   "main": "electron/main.js",
   "type": "commonjs",
   "scripts": {
-    "install-reqs": "cd frontend && npm install && cd backend && uv sync",
+    "install-reqs": "npm install && npm --prefix frontend install && cd backend && uv sync",
     "dev": "npm run dev:electron",
     "dev:electron": "concurrently \"npm run dev:sidecar\" \"npm run dev:frontend\" \"npm run electron:start\"",
     "dev:sidecar": "cd backend && uv run python -m texthunter",
@@ -15,7 +15,7 @@
     "generate:sdk": "openapi-ts",
     "generate:sdk:watch": "openapi-ts --watch",
     "build:sidecar-winos": "cd backend && ..\\backend\\.venv\\Scripts\\pyinstaller.exe -c -F --clean --name main --distpath dist --paths . texthunter/main.py",
-    "build": "npm run generate:sdk && npm run build:frontend && npm run build:electron:compile && npm run build:electron",
+    "build": "npm run build:frontend && npm run build:electron:compile && npm run build:electron",
     "build:frontend": "cd frontend && npm run build",
     "build:electron:compile": "tsc -p electron/tsconfig.json",
     "build:electron": "electron-builder --win",

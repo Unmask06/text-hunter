@@ -125,6 +125,9 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install root dependencies
+        run: npm ci
+
       - name: Install backend dependencies
         run: cd backend && uv sync --frozen
 

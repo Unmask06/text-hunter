@@ -113,7 +113,6 @@ Environment files:
 - All FastAPI routes MUST have `operation_id` and `tags` for clean SDK method names
 - Binary endpoints (export) use native `fetch()` directly since SDK doesn't handle blobs
 - Regenerate after backend changes: `npm run generate:sdk` (requires sidecar running)
-- Auto-runs before `npm run build` via pre-build hook
 
 ## Important Notes
 
